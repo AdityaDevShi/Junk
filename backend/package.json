@@ -1,0 +1,22 @@
+{
+  "name": "community-hero-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Community Hero — backend API (Express + Gemini + Firebase Admin)",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@google/genai": "^2.9.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "firebase-admin": "^14.0.0"
+  }
+}
