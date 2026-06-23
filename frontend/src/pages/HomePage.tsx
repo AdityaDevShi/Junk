@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import type { Issue } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
+import IssueMap from "../components/IssueMap";
 
 export default function HomePage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<"map" | "list">("map");
 
   useEffect(() => {
     let alive = true;
@@ -57,46 +59,65 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Map view comes next (task #5). For now, a live feed. */}
-      <section className="feed">
-        <h2>Recent reports</h2>
+      <div className="view-toggle">
+        <button
+          className={view === "map" ? "active" : ""}
+          onClick={() => setView("map")}
+        >
+          🗺️ Map
+        </button>
+        <button
+          className={view === "list" ? "active" : ""}
+          onClick={() => setView("list")}
+        >
+          ☰ List
+        </button>
+      </div>
 
-        {loading && <div className="muted">Loading…</div>}
-        {error && <div className="error-box">{error}</div>}
-        {!loading && !error && issues.length === 0 && (
-          <div className="empty">
-            <p>No issues reported yet. Be the first Community Hero! 🦸</p>
-            <Link to="/report" className="btn btn-primary">
-              Report an issue
-            </Link>
-          </div>
-        )}
+      {loading && <div className="muted">Loading…</div>}
+      {error && <div className="error-box">Couldn't load issues: {error}</div>}
 
-        <div className="cards">
-          {issues.map((issue) => (
-            <article key={issue.id} className="issue-card">
-              {issue.imageData && (
-                <img className="issue-thumb" src={issue.imageData} alt={issue.title} />
-              )}
-              <div className="issue-body">
-                <div className="row gap wrap">
-                  <span className="badge cat">{categoryLabel(issue.category)}</span>
-                  <SeverityBadge severity={issue.severity} />
-                  <StatusPill status={issue.status} />
-                </div>
-                <h3>{issue.title}</h3>
-                <p className="muted small">{issue.description}</p>
-                {issue.location?.address && (
-                  <p className="muted small">📍 {issue.location.address}</p>
-                )}
-                {issue.reportCount > 1 && (
-                  <span className="report-count">{issue.reportCount} reports</span>
-                )}
-              </div>
-            </article>
-          ))}
+      {!loading && !error && issues.length === 0 && (
+        <div className="empty">
+          <p>No issues reported yet. Be the first Community Hero! 🦸</p>
+          <Link to="/report" className="btn btn-primary">
+            Report an issue
+          </Link>
         </div>
-      </section>
+      )}
+
+      {!loading && !error && issues.length > 0 && view === "map" && (
+        <IssueMap issues={issues} />
+      )}
+
+      {!loading && !error && issues.length > 0 && view === "list" && (
+        <section className="feed">
+          <div className="cards">
+            {issues.map((issue) => (
+              <article key={issue.id} className="issue-card">
+                {issue.imageData && (
+                  <img className="issue-thumb" src={issue.imageData} alt={issue.title} />
+                )}
+                <div className="issue-body">
+                  <div className="row gap wrap">
+                    <span className="badge cat">{categoryLabel(issue.category)}</span>
+                    <SeverityBadge severity={issue.severity} />
+                    <StatusPill status={issue.status} />
+                  </div>
+                  <h3>{issue.title}</h3>
+                  <p className="muted small">{issue.description}</p>
+                  {issue.location?.address && (
+                    <p className="muted small">📍 {issue.location.address}</p>
+                  )}
+                  {issue.reportCount > 1 && (
+                    <span className="report-count">{issue.reportCount} reports</span>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

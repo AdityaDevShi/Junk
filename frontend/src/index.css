@@ -409,3 +409,101 @@ p {
   padding-left: 1.1rem;
   color: var(--muted);
 }
+
+/* ---- Map + view toggle ---- */
+.view-toggle {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 1rem;
+  gap: 3px;
+}
+.view-toggle button {
+  border: none;
+  background: transparent;
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+.view-toggle button.active {
+  background: var(--primary);
+  color: #fff;
+}
+.issue-map {
+  position: relative;
+  height: 440px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.issue-map .leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+.sev-marker {
+  background: transparent;
+  border: none;
+}
+.sev-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.sev-dot.pulse {
+  animation: sev-pulse 1.6s infinite;
+}
+@keyframes sev-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+.map-popup img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.4rem;
+}
+.map-popup strong {
+  display: block;
+  margin-top: 0.3rem;
+}
+.map-legend {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+.map-legend .lg {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.12rem 0;
+}
+.map-legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
