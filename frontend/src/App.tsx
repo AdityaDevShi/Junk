@@ -13,6 +13,9 @@ export default function App() {
           <Link to="/" className={loc.pathname === "/" ? "active" : ""}>
             Map
           </Link>
+          <Link to="/gov" className={loc.pathname === "/gov" ? "active" : ""}>
+            Authority
+          </Link>
           <Link to="/report" className="btn btn-primary btn-sm">
             ＋ Report
           </Link>

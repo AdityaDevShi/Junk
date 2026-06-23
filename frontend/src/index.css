@@ -571,3 +571,65 @@ a.issue-card:hover {
   line-height: 1.5;
   margin-bottom: 0.8rem;
 }
+
+/* ---- Government / authority panel ---- */
+.gov-banner {
+  background: #0f172a;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.gov-banner span {
+  color: #93c5fd;
+}
+.gov-list {
+  display: grid;
+  gap: 0.7rem;
+}
+.gov-row {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.7rem;
+  box-shadow: var(--shadow);
+}
+.gov-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.gov-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.gov-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+.resolved-tag {
+  color: var(--sev-low);
+  font-weight: 700;
+  white-space: nowrap;
+}
+@media (max-width: 560px) {
+  .gov-row {
+    flex-wrap: wrap;
+  }
+  .gov-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}

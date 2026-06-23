@@ -6,6 +6,7 @@ import App from "./App";
 import HomePage from "./pages/HomePage";
 import ReportPage from "./pages/ReportPage";
 import IssueDetailPage from "./pages/IssueDetailPage";
+import GovPanelPage from "./pages/GovPanelPage";
 
 const router = createBrowserRouter([
   {
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "report", element: <ReportPage /> },
       { path: "issue/:id", element: <IssueDetailPage /> },
+      { path: "gov", element: <GovPanelPage /> },
     ],
   },
 ]);
