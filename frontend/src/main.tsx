@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./App";
 import HomePage from "./pages/HomePage";
 import ReportPage from "./pages/ReportPage";
+import IssueDetailPage from "./pages/IssueDetailPage";
 
 const router = createBrowserRouter([
   {
@@ -13,6 +14,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "report", element: <ReportPage /> },
+      { path: "issue/:id", element: <IssueDetailPage /> },
     ],
   },
 ]);

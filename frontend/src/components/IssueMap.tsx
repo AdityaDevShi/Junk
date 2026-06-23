@@ -1,6 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { Link } from "react-router-dom";
 import type { Issue, Severity } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "./badges";
 
@@ -63,6 +64,9 @@ export default function IssueMap({ issues }: { issues: Issue[] }) {
                 {issue.reportCount > 1 && (
                   <div className="report-count">{issue.reportCount} reports</div>
                 )}
+                <Link to={`/issue/${issue.id}`} className="link-btn">
+                  View details →
+                </Link>
               </div>
             </Popup>
           </Marker>

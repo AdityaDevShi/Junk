@@ -94,7 +94,7 @@ export default function HomePage() {
         <section className="feed">
           <div className="cards">
             {issues.map((issue) => (
-              <article key={issue.id} className="issue-card">
+              <Link key={issue.id} to={`/issue/${issue.id}`} className="issue-card">
                 {issue.imageData && (
                   <img className="issue-thumb" src={issue.imageData} alt={issue.title} />
                 )}
@@ -113,7 +113,7 @@ export default function HomePage() {
                     <span className="report-count">{issue.reportCount} reports</span>
                   )}
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </section>
