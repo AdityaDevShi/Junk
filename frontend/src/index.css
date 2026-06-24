@@ -893,3 +893,56 @@ a.issue-card:hover,
     transition: none !important;
   }
 }
+
+/* ---- Auth ---- */
+.auth-page {
+  max-width: 400px;
+  margin: 7vh auto 0;
+  animation: fadeInUp 0.35s ease both;
+}
+.auth-page h1 {
+  font-size: 1.5rem;
+}
+.input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  font: inherit;
+  background: var(--surface);
+  margin-bottom: 0.6rem;
+}
+.btn-google {
+  background: #fff;
+  border-color: var(--border);
+  color: #3c4043;
+}
+.btn-google:hover {
+  background: #f8f7f4;
+}
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 1rem 0;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.divider span {
+  padding: 0 0.7rem;
+}
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
