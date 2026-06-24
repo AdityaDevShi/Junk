@@ -16,28 +16,36 @@ export default function HomePage() {
 
   useEffect(() => {
     let alive = true;
-    api
-      .listIssues()
-      .then((d) => {
-        if (alive) setIssues(d);
-      })
-      .catch((e) => {
-        if (alive) setError(e instanceof Error ? e.message : "Failed to load");
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
 
-    // Ask for live location (permission). Used to show "you are here" + a
-    // locate button; falls back silently to the city view if denied.
+    const load = (initial = false) => {
+      api
+        .listIssues()
+        .then((d) => {
+          if (alive) setIssues(d);
+        })
+        .catch((e) => {
+          if (alive && initial) setError(e instanceof Error ? e.message : "Failed to load");
+        })
+        .finally(() => {
+          if (alive && initial) setLoading(false);
+        });
+    };
+
+    load(true);
+
+    // Live location (permission) for the "you are here" marker + locate button.
     getCurrentPosition()
       .then((p) => {
         if (alive) setUserLoc([p.lat, p.lng]);
       })
       .catch(() => {});
 
+    // Near-real-time: silently refresh the map/feed every 8s.
+    const timer = setInterval(() => load(false), 8000);
+
     return () => {
       alive = false;
+      clearInterval(timer);
     };
   }, []);
 
