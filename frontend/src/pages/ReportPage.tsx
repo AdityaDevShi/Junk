@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { compressImage } from "../lib/image";
 import { getLocation } from "../lib/geo";
-import { getUser } from "../lib/user";
+import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
 import { SeverityBadge, categoryLabel } from "../components/badges";
 import { Loader } from "../components/Loader";
@@ -14,6 +14,7 @@ type ReportResult = Issue & { merged?: boolean; alreadyReported?: boolean };
 
 export default function ReportPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [preview, setPreview] = useState<string | null>(null);
@@ -78,17 +79,20 @@ export default function ReportPage() {
       setError("Please add a photo first.");
       return;
     }
+    if (!user) return;
     setPhase("submitting");
     setError(null);
     try {
-      const user = getUser();
+      const reporterName = user.isAnonymous
+        ? "Anonymous"
+        : user.displayName || user.email?.split("@")[0] || "Citizen";
       const issue = await api.reportIssue({
         imageBase64: base64,
         mimeType: "image/jpeg",
         note,
         location,
-        reporterId: user.id,
-        reporterName: user.name,
+        reporterId: user.uid,
+        reporterName,
       });
       setResult(issue);
       setPhase("done");
@@ -96,6 +100,20 @@ export default function ReportPage() {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setPhase("error");
     }
+  }
+
+  // ---- Must be signed in to report ----
+  if (!user) {
+    return (
+      <div className="report-page">
+        <div className="empty">
+          <p>Please sign in to report an issue.</p>
+          <Link to="/login" className="btn btn-primary">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   // ---- Submitting (AI analysis) ----

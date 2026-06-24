@@ -4,10 +4,14 @@ import type { Issue } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
 import { compressImage } from "../lib/image";
 import { Loader } from "../components/Loader";
+import { useAuth } from "../lib/auth";
 
 const SEV_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
 
 export default function GovPanelPage() {
+  const { user } = useAuth();
+  const authorityName = user?.displayName || user?.email || "Authority";
+
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -32,7 +36,7 @@ export default function GovPanelPage() {
   async function setStatus(id: string, status: string) {
     setBusyId(id);
     try {
-      await api.updateStatus(id, status, "BBMP Authority");
+      await api.updateStatus(id, status, authorityName);
       await load();
     } finally {
       setBusyId(null);
@@ -52,7 +56,7 @@ export default function GovPanelPage() {
     setBusyId(id);
     try {
       const c = await compressImage(file);
-      await api.resolveIssue(id, c.base64, "image/jpeg", "BBMP Authority");
+      await api.resolveIssue(id, c.base64, "image/jpeg", authorityName);
       await load();
     } finally {
       setBusyId(null);
@@ -69,7 +73,7 @@ export default function GovPanelPage() {
   return (
     <div className="gov">
       <div className="gov-banner">
-        🏛️ Authority Dashboard — <span>BBMP (demo)</span>
+        🏛️ Authority Dashboard — <span>{authorityName}</span>
       </div>
 
       <section className="stats">
