@@ -7,6 +7,7 @@ import HomePage from "./pages/HomePage";
 import ReportPage from "./pages/ReportPage";
 import IssueDetailPage from "./pages/IssueDetailPage";
 import GovPanelPage from "./pages/GovPanelPage";
+import LeaderboardPage from "./pages/LeaderboardPage";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
       { path: "report", element: <ReportPage /> },
       { path: "issue/:id", element: <IssueDetailPage /> },
       { path: "gov", element: <GovPanelPage /> },
+      { path: "leaderboard", element: <LeaderboardPage /> },
     ],
   },
 ]);

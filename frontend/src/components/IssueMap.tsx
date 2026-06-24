@@ -1,4 +1,5 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Link } from "react-router-dom";
@@ -12,20 +13,29 @@ export const SEV_COLORS: Record<Severity, string> = {
   critical: "#dc2626",
 };
 
-function markerIcon(severity: Severity): L.DivIcon {
+function markerIcon(severity: Severity, count: number): L.DivIcon {
   const color = SEV_COLORS[severity] ?? "#64748b";
   const pulse = severity === "critical" ? " pulse" : "";
+  const badge = count > 1 ? `<b class="sev-count">${count}</b>` : "";
   return L.divIcon({
     className: "sev-marker",
-    html: `<span class="sev-dot${pulse}" style="background:${color}"></span>`,
+    html: `<span class="sev-dot${pulse}" style="background:${color}">${badge}</span>`,
     iconSize: [22, 22],
     iconAnchor: [11, 11],
     popupAnchor: [0, -12],
   });
 }
 
-// Default view: Bengaluru (swap once issues exist).
-const DEFAULT_CENTER: [number, number] = [12.9716, 77.5946];
+function userIcon(): L.DivIcon {
+  return L.divIcon({
+    className: "sev-marker",
+    html: `<span style="display:block;width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 5px rgba(37,99,235,0.25)"></span>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+  });
+}
+
+const DEFAULT_CENTER: [number, number] = [12.9716, 77.5946]; // Bengaluru
 
 function getCenter(issues: Issue[]): [number, number] {
   const pts = issues.filter((i) => i.location).map((i) => i.location!);
@@ -35,22 +45,50 @@ function getCenter(issues: Issue[]): [number, number] {
   return [lat, lng];
 }
 
-export default function IssueMap({ issues }: { issues: Issue[] }) {
-  const center = getCenter(issues);
+// Fit the map to all reported issues so the markers/areas are always visible.
+function FitBounds({ issues }: { issues: Issue[] }) {
+  const map = useMap();
+  useEffect(() => {
+    const pts = issues
+      .filter((i) => i.location)
+      .map((i) => [i.location!.lat, i.location!.lng] as [number, number]);
+    if (pts.length >= 2) map.fitBounds(pts, { padding: [50, 50], maxZoom: 15 });
+    else if (pts.length === 1) map.setView(pts[0], 14);
+  }, [issues, map]);
+  return null;
+}
+
+export default function IssueMap({
+  issues,
+  userLoc = null,
+}: {
+  issues: Issue[];
+  userLoc?: [number, number] | null;
+}) {
+  const mapRef = useRef<L.Map | null>(null);
+  const initialCenter = userLoc ?? getCenter(issues);
   const withLoc = issues.filter((i) => i.location);
 
   return (
     <div className="issue-map">
-      <MapContainer center={center} zoom={13} scrollWheelZoom>
+      <MapContainer ref={mapRef} center={initialCenter} zoom={13} scrollWheelZoom>
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <FitBounds issues={issues} />
+
+        {userLoc && (
+          <Marker position={userLoc} icon={userIcon()}>
+            <Popup>You are here</Popup>
+          </Marker>
+        )}
+
         {withLoc.map((issue) => (
           <Marker
             key={issue.id}
             position={[issue.location!.lat, issue.location!.lng]}
-            icon={markerIcon(issue.severity)}
+            icon={markerIcon(issue.severity, issue.reportCount)}
           >
             <Popup>
               <div className="map-popup">
@@ -72,6 +110,12 @@ export default function IssueMap({ issues }: { issues: Issue[] }) {
           </Marker>
         ))}
       </MapContainer>
+
+      {userLoc && (
+        <button className="locate-btn" onClick={() => mapRef.current?.setView(userLoc, 15)}>
+          📍 My location
+        </button>
+      )}
 
       <div className="map-legend">
         <div className="lg">

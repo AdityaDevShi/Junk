@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 
 export default function App() {
   const loc = useLocation();
+  const is = (p: string) => (loc.pathname === p ? "active" : "");
   return (
     <div className="app">
       <header className="app-header">
@@ -10,10 +11,13 @@ export default function App() {
           <span>Community&nbsp;Hero</span>
         </Link>
         <nav className="nav">
-          <Link to="/" className={loc.pathname === "/" ? "active" : ""}>
+          <Link to="/" className={is("/")}>
             Map
           </Link>
-          <Link to="/gov" className={loc.pathname === "/gov" ? "active" : ""}>
+          <Link to="/leaderboard" className={is("/leaderboard")}>
+            Impact
+          </Link>
+          <Link to="/gov" className={is("/gov")}>
             Authority
           </Link>
           <Link to="/report" className="btn btn-primary btn-sm">
