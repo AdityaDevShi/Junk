@@ -18,28 +18,39 @@ import {
 } from "firebase/auth";
 import { auth } from "./firebase";
 import { roleForEmail, type Role } from "./roles";
+import { ensureProfile, saveProfile as saveProfileDoc, type Profile } from "./profile";
 
 interface AuthContextValue {
   user: User | null;
   role: Role;
+  profile: Profile | null;
   loading: boolean;
   signInGoogle: () => Promise<void>;
   signInEmail: (email: string, pw: string) => Promise<void>;
   signUpEmail: (email: string, pw: string, name?: string) => Promise<void>;
   signInAnon: () => Promise<void>;
   signOut: () => Promise<void>;
+  saveProfile: (data: Partial<Profile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
+      if (u) {
+        ensureProfile(u)
+          .then(setProfile)
+          .catch(() => setProfile(null));
+      } else {
+        setProfile(null);
+      }
     });
   }, []);
 
@@ -49,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     user,
     role,
+    profile,
     loading,
     signInGoogle: async () => {
       await signInWithPopup(auth, new GoogleAuthProvider());
@@ -65,6 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     signOut: async () => {
       await fbSignOut(auth);
+    },
+    saveProfile: async (data) => {
+      if (!user) return;
+      await saveProfileDoc(user.uid, data);
+      setProfile((p) => (p ? { ...p, ...data } : p));
     },
   };
 

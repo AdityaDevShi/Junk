@@ -947,3 +947,46 @@ a.issue-card:hover,
   font-size: 0.9rem;
   color: var(--text);
 }
+a.user-chip {
+  text-decoration: none;
+  background: var(--bg-tint);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+}
+a.user-chip:hover {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+/* ---- Profile ---- */
+.profile-page {
+  max-width: 520px;
+  margin: 0 auto;
+}
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.avatar-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+.sep {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.2rem 0;
+}

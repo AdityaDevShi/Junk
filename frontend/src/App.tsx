@@ -4,8 +4,10 @@ import { useAuth } from "./lib/auth";
 export default function App() {
   const loc = useLocation();
   const is = (p: string) => (loc.pathname === p ? "active" : "");
-  const { user, role, signOut } = useAuth();
-  const displayName = user
+  const { user, role, profile } = useAuth();
+  const displayName = profile?.displayName
+    ? profile.displayName
+    : user
     ? user.isAnonymous
       ? "Guest"
       : user.displayName || user.email?.split("@")[0] || "You"
@@ -34,12 +36,9 @@ export default function App() {
             ＋ Report
           </Link>
           {user ? (
-            <span className="user-chip">
+            <Link to="/profile" className="user-chip">
               {displayName}
-              <button className="link-btn" onClick={() => void signOut()}>
-                Sign out
-              </button>
-            </span>
+            </Link>
           ) : (
             <Link to="/login" className={is("/login")}>
               Sign in

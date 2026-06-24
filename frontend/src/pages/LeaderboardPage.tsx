@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import type { Issue } from "../types";
-import { getUser } from "../lib/user";
+import { useAuth } from "../lib/auth";
 import { computeUserScore, cityLeaderboard } from "../lib/score";
 import { Loader } from "../components/Loader";
 
 export default function LeaderboardPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     api
@@ -19,8 +20,7 @@ export default function LeaderboardPage() {
 
   if (loading) return <Loader />;
 
-  const me = getUser();
-  const score = computeUserScore(issues, me.id);
+  const score = computeUserScore(issues, user?.uid ?? "");
   const cities = cityLeaderboard(issues);
 
   return (

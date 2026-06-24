@@ -14,7 +14,7 @@ type ReportResult = Issue & { merged?: boolean; alreadyReported?: boolean };
 
 export default function ReportPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [preview, setPreview] = useState<string | null>(null);
@@ -83,9 +83,11 @@ export default function ReportPage() {
     setPhase("submitting");
     setError(null);
     try {
-      const reporterName = user.isAnonymous
-        ? "Anonymous"
-        : user.displayName || user.email?.split("@")[0] || "Citizen";
+      const reporterName =
+        profile?.displayName ||
+        (user.isAnonymous
+          ? "Anonymous"
+          : user.displayName || user.email?.split("@")[0] || "Citizen");
       const issue = await api.reportIssue({
         imageBase64: base64,
         mimeType: "image/jpeg",
