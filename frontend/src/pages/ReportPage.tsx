@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import confetti from "canvas-confetti";
 import { compressImage } from "../lib/image";
 import { getLocation } from "../lib/geo";
 import { getUser } from "../lib/user";
 import { api } from "../lib/api";
 import { SeverityBadge, categoryLabel } from "../components/badges";
+import { Loader } from "../components/Loader";
 import type { Issue, IssueLocation } from "../types";
 
 type Phase = "capture" | "submitting" | "done" | "error";
@@ -26,6 +28,18 @@ export default function ReportPage() {
   useEffect(() => {
     void grabLocation();
   }, []);
+
+  // Celebrate a successful report.
+  useEffect(() => {
+    if (phase === "done") {
+      confetti({
+        particleCount: 130,
+        spread: 75,
+        origin: { y: 0.6 },
+        colors: ["#0f8b80", "#f59e0b", "#16a34a", "#ea580c"],
+      });
+    }
+  }, [phase]);
 
   async function grabLocation() {
     setLocating(true);
@@ -82,6 +96,15 @@ export default function ReportPage() {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setPhase("error");
     }
+  }
+
+  // ---- Submitting (AI analysis) ----
+  if (phase === "submitting") {
+    return (
+      <div className="report-page">
+        <Loader label="Analyzing your report with AI…" />
+      </div>
+    );
   }
 
   // ---- Success view ----
@@ -216,10 +239,10 @@ export default function ReportPage() {
 
       <button
         className="btn btn-primary btn-block"
-        disabled={phase === "submitting" || !base64}
+        disabled={!base64}
         onClick={() => void submit()}
       >
-        {phase === "submitting" ? "Analyzing & submitting…" : "Submit report"}
+        Submit report
       </button>
 
       <Link to="/" className="link-btn center">

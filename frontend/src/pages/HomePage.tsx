@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import type { Issue } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
 import IssueMap from "../components/IssueMap";
+import { Loader } from "../components/Loader";
 import { getCurrentPosition } from "../lib/geo";
 
 export default function HomePage() {
@@ -77,7 +78,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {loading && <div className="muted">Loading…</div>}
+      {loading && <Loader label="Loading your neighbourhood…" />}
       {error && <div className="error-box">Couldn't load issues: {error}</div>}
 
       {!loading &&

@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "../lib/api";
 import type { Issue } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
+import { Loader } from "../components/Loader";
 
 export default function IssueDetailPage() {
   const { id } = useParams();
@@ -52,7 +53,7 @@ export default function IssueDetailPage() {
     }
   }
 
-  if (loading) return <div className="muted">Loading…</div>;
+  if (loading) return <Loader label="Loading issue…" />;
   if (error) return <div className="error-box">{error}</div>;
   if (!issue)
     return (

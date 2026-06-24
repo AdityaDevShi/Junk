@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import type { Issue } from "../types";
 import { getUser } from "../lib/user";
 import { computeUserScore, cityLeaderboard } from "../lib/score";
+import { Loader } from "../components/Loader";
 
 export default function LeaderboardPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -16,7 +17,7 @@ export default function LeaderboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="muted">Loading…</div>;
+  if (loading) return <Loader />;
 
   const me = getUser();
   const score = computeUserScore(issues, me.id);

@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import type { Issue } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
 import { compressImage } from "../lib/image";
+import { Loader } from "../components/Loader";
 
 const SEV_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
 
@@ -95,7 +96,7 @@ export default function GovPanelPage() {
         onChange={onAfterPhoto}
       />
 
-      {loading && <div className="muted">Loading…</div>}
+      {loading && <Loader label="Loading reports…" />}
       {!loading && issues.length === 0 && (
         <div className="empty">
           <p>No reports yet.</p>
