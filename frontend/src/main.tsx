@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import { AuthProvider } from "./lib/auth";
+import { RequireAuthority } from "./components/RequireAuthority";
 import App from "./App";
 import HomePage from "./pages/HomePage";
 import ReportPage from "./pages/ReportPage";
@@ -20,7 +21,14 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "report", element: <ReportPage /> },
       { path: "issue/:id", element: <IssueDetailPage /> },
-      { path: "gov", element: <GovPanelPage /> },
+      {
+        path: "gov",
+        element: (
+          <RequireAuthority>
+            <GovPanelPage />
+          </RequireAuthority>
+        ),
+      },
       { path: "leaderboard", element: <LeaderboardPage /> },
     ],
   },

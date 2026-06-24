@@ -1,4 +1,4 @@
-# Community Hero — Hyperlocal Problem Solver
+# MuniPeople — Hyperlocal Problem Solver
 
 AI-powered civic issue reporting & resolution platform. Citizens snap a photo of a local
 problem (pothole, garbage, broken streetlight, waterlogging…); **Gemini** categorizes and
@@ -6,11 +6,11 @@ rates it; the issue is mapped, tracked, and routed toward resolution — with th
 verifying fixes and earning civic recognition.
 
 > Built for **VIBE2SHIP** (Coding Ninjas × Google for Developers).
-> Problem statement: *Community Hero — Hyperlocal Problem Solver.*
+> Problem statement: *MuniPeople — Hyperlocal Problem Solver.*
 > _(Working product name: **Samadhan** — समाधान, "resolution" — TBD.)_
 
 ## Why it's different
-Most civic apps stop at "classify + route." Community Hero adds:
+Most civic apps stop at "classify + route." MuniPeople adds:
 - **Agentic handling** — one tap; the agent categorizes, de-duplicates, drafts the formal
   complaint, and tracks it to closure.
 - **Crowd-as-priority** — duplicate reports of the same issue merge into one ticket and

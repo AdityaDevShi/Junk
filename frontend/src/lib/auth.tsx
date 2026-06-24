@@ -17,9 +17,11 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "./firebase";
+import { roleForEmail, type Role } from "./roles";
 
 interface AuthContextValue {
   user: User | null;
+  role: Role;
   loading: boolean;
   signInGoogle: () => Promise<void>;
   signInEmail: (email: string, pw: string) => Promise<void>;
@@ -41,8 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // Authority role only for known emails (never for anonymous guests).
+  const role: Role = user && !user.isAnonymous ? roleForEmail(user.email) : "citizen";
+
   const value: AuthContextValue = {
     user,
+    role,
     loading,
     signInGoogle: async () => {
       await signInWithPopup(auth, new GoogleAuthProvider());

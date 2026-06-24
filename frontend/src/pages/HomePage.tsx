@@ -81,7 +81,7 @@ export default function HomePage() {
           <IssueMap issues={issues} userLoc={userLoc} />
         ) : issues.length === 0 ? (
           <div className="empty">
-            <p>No issues reported yet. Be the first Community Hero! 🦸</p>
+            <p>No issues reported yet. Be the first to report one! 🦸</p>
             <Link to="/report" className="btn btn-primary">
               Report an issue
             </Link>

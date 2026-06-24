@@ -4,7 +4,7 @@ import { useAuth } from "./lib/auth";
 export default function App() {
   const loc = useLocation();
   const is = (p: string) => (loc.pathname === p ? "active" : "");
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const displayName = user
     ? user.isAnonymous
       ? "Guest"
@@ -16,7 +16,7 @@ export default function App() {
       <header className="app-header">
         <Link to="/" className="brand">
           <span className="brand-mark">📍</span>
-          <span>Community&nbsp;Hero</span>
+          <span>MuniPeople</span>
         </Link>
         <nav className="nav">
           <Link to="/" className={is("/")}>
@@ -25,9 +25,11 @@ export default function App() {
           <Link to="/leaderboard" className={is("/leaderboard")}>
             Impact
           </Link>
-          <Link to="/gov" className={is("/gov")}>
-            Authority
-          </Link>
+          {role === "authority" && (
+            <Link to="/gov" className={is("/gov")}>
+              Authority
+            </Link>
+          )}
           <Link to="/report" className="btn btn-primary btn-sm">
             ＋ Report
           </Link>

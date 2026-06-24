@@ -27,8 +27,7 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page card">
-      <h1>Welcome to Community Hero</h1>
-      <p className="muted">Sign in to report and track civic issues in your area.</p>
+      <h1>Welcome to MuniPeople</h1>
 
       <button
         className="btn btn-google btn-block"
