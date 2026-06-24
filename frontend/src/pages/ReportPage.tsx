@@ -8,6 +8,7 @@ import { SeverityBadge, categoryLabel } from "../components/badges";
 import type { Issue, IssueLocation } from "../types";
 
 type Phase = "capture" | "submitting" | "done" | "error";
+type ReportResult = Issue & { merged?: boolean; alreadyReported?: boolean };
 
 export default function ReportPage() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function ReportPage() {
   const [locating, setLocating] = useState(false);
   const [phase, setPhase] = useState<Phase>("capture");
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<Issue | null>(null);
+  const [result, setResult] = useState<ReportResult | null>(null);
 
   useEffect(() => {
     void grabLocation();
@@ -50,6 +51,14 @@ export default function ReportPage() {
     }
   }
 
+  function resetForm() {
+    setPreview(null);
+    setBase64(null);
+    setNote("");
+    setResult(null);
+    setPhase("capture");
+  }
+
   async function submit() {
     if (!base64) {
       setError("Please add a photo first.");
@@ -77,11 +86,25 @@ export default function ReportPage() {
 
   // ---- Success view ----
   if (phase === "done" && result) {
+    const merged = !!result.merged;
+    const already = !!result.alreadyReported;
     return (
       <div className="report-result card">
-        <div className="result-check">✓</div>
-        <h2>Reported — thank you!</h2>
-        <p className="muted">Our AI agent has triaged your report:</p>
+        <div className="result-check">{already ? "ℹ" : merged ? "👥" : "✓"}</div>
+        <h2>
+          {already
+            ? "You've already reported this"
+            : merged
+            ? "Added to an existing report"
+            : "Reported — thank you!"}
+        </h2>
+        <p className="muted">
+          {already
+            ? "This issue is already on the map and being tracked — no duplicate created."
+            : merged
+            ? `Others had already reported this. It now has ${result.reportCount} reports — priority escalates with each one.`
+            : "Our AI agent triaged your report:"}
+        </p>
 
         {result.imageData && (
           <img className="result-img" src={result.imageData} alt={result.title} />
@@ -89,9 +112,12 @@ export default function ReportPage() {
 
         <div className="result-meta">
           <h3>{result.title}</h3>
-          <div className="row gap">
+          <div className="row gap wrap">
             <span className="badge cat">{categoryLabel(result.category)}</span>
             <SeverityBadge severity={result.severity} />
+            {result.reportCount > 1 && (
+              <span className="report-count">{result.reportCount} reports</span>
+            )}
           </div>
           <p>{result.description}</p>
           {result.location?.address && (
@@ -100,11 +126,25 @@ export default function ReportPage() {
         </div>
 
         <div className="agent-next">
-          <strong>What happens next</strong>
+          <strong>What the agent did</strong>
           <ul>
-            <li>Checked for duplicate reports nearby</li>
-            <li>Routed to the responsible department</li>
-            <li>You'll be notified as the status changes</li>
+            {merged ? (
+              <>
+                <li>Matched it to an existing nearby report (same type + location)</li>
+                <li>
+                  {already
+                    ? "Recognised you'd already reported it — no duplicate added"
+                    : `Merged into one ticket → ${result.reportCount} reports, severity ${result.severity}`}
+                </li>
+                <li>More reports push the issue up the priority list</li>
+              </>
+            ) : (
+              <>
+                <li>Classified the issue type & severity from your photo</li>
+                <li>Checked for duplicate reports nearby</li>
+                <li>Routed it to the responsible department</li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -112,16 +152,7 @@ export default function ReportPage() {
           <button className="btn btn-primary" onClick={() => navigate("/")}>
             View on map
           </button>
-          <button
-            className="btn btn-ghost"
-            onClick={() => {
-              setPreview(null);
-              setBase64(null);
-              setNote("");
-              setResult(null);
-              setPhase("capture");
-            }}
-          >
+          <button className="btn btn-ghost" onClick={resetForm}>
             Report another
           </button>
         </div>

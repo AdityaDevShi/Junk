@@ -2,6 +2,9 @@ import { getDb } from "../config/firebase.js";
 import { FieldValue } from "firebase-admin/firestore";
 
 const COLLECTION = "issues";
+const SEV_RANK = { low: 1, medium: 2, high: 3, critical: 4 };
+const SEV_BY_RANK = { 1: "low", 2: "medium", 3: "high", 4: "critical" };
+const DEDUP_RADIUS_M = 60;
 
 // ---- In-memory fallback (used when Firestore isn't configured) ----
 // Lets the whole app run locally / in a demo without Firebase. Data resets
@@ -28,6 +31,31 @@ function genId() {
 }
 function coll() {
   return getDb().collection(COLLECTION);
+}
+
+// ---- severity + geo helpers (used by the dedup agent) ----
+function maxSeverity(a, b) {
+  const r = Math.max(SEV_RANK[a] || 2, SEV_RANK[b] || 1);
+  return SEV_BY_RANK[r];
+}
+function crowdSeverity(reportCount) {
+  if (reportCount >= 10) return "critical";
+  if (reportCount >= 5) return "high";
+  if (reportCount >= 3) return "medium";
+  return "low";
+}
+function haversineMeters(a, b) {
+  if (!a || !b) return Infinity;
+  const R = 6371000;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 function buildDoc(data) {
@@ -132,5 +160,48 @@ export async function reopenIssue(id, { reason } = {}) {
 export async function setComplaintDraft(id, complaintDraft) {
   if (usingMemory()) return memUpdate(id, { complaintDraft });
   await coll().doc(id).update({ complaintDraft, updatedAt: FieldValue.serverTimestamp() });
+  return getIssue(id);
+}
+
+// ---- Agentic dedup / crowd-priority ----
+
+async function getOpenByCategory(category) {
+  if (usingMemory())
+    return mem.filter((i) => i.category === category && i.status !== "resolved");
+  const snap = await coll().where("category", "==", category).limit(50).get();
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((i) => i.status !== "resolved");
+}
+
+/** Find an existing OPEN issue of the same category within DEDUP_RADIUS_M. */
+export async function findOpenDuplicate({ category, location }) {
+  if (!location) return null; // need a location to dedupe spatially
+  const candidates = await getOpenByCategory(category);
+  let best = null;
+  let bestDist = DEDUP_RADIUS_M;
+  for (const c of candidates) {
+    const d = haversineMeters(location, c.location);
+    if (d <= bestDist) {
+      best = c;
+      bestDist = d;
+    }
+  }
+  return best;
+}
+
+/** Add a corroborating reporter, bump the count, and escalate severity by crowd size. */
+export async function corroborateIssue(id, reporterId) {
+  const issue = await getIssue(id);
+  if (!issue) return null;
+  const corroborators = Array.from(
+    new Set([...(issue.corroborators || []), reporterId].filter(Boolean))
+  );
+  const reportCount = (issue.reportCount || 1) + 1;
+  const severity = maxSeverity(issue.severity, crowdSeverity(reportCount));
+  if (usingMemory()) return memUpdate(id, { corroborators, reportCount, severity });
+  await coll()
+    .doc(id)
+    .update({ corroborators, reportCount, severity, updatedAt: FieldValue.serverTimestamp() });
   return getIssue(id);
 }

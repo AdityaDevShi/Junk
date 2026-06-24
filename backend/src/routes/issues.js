@@ -8,6 +8,8 @@ import {
   resolveIssue,
   reopenIssue,
   setComplaintDraft,
+  findOpenDuplicate,
+  corroborateIssue,
 } from "../services/issuesService.js";
 
 const router = Router();
@@ -46,11 +48,26 @@ router.post("/", async (req, res, next) => {
     } = req.body || {};
     if (!imageBase64) return res.status(400).json({ error: "imageBase64 is required" });
 
+    // 1) AI triage (category + severity + description) from the photo.
     const classified = await classifyIssue({ imageBase64, mimeType, note });
     if (classified.isCivicIssue === false) {
       return res.status(422).json({ error: "not_a_civic_issue", classification: classified });
     }
 
+    // 2) Agentic dedup: merge into an existing nearby open issue of the same category.
+    const dup = await findOpenDuplicate({ category: classified.category, location });
+    if (dup) {
+      const already =
+        dup.reporterId === reporterId || (dup.corroborators || []).includes(reporterId);
+      if (already) {
+        // Same user re-reporting the same open issue — don't inflate the count.
+        return res.json({ ...dup, merged: true, alreadyReported: true });
+      }
+      const updated = await corroborateIssue(dup.id, reporterId);
+      return res.json({ ...updated, merged: true });
+    }
+
+    // 3) Otherwise create a fresh ticket.
     const issue = await createIssue({
       title: classified.title,
       description: classified.description,
@@ -62,7 +79,7 @@ router.post("/", async (req, res, next) => {
       reporterId,
       reporterName,
     });
-    res.status(201).json(issue);
+    res.status(201).json({ ...issue, merged: false });
   } catch (err) {
     next(err);
   }

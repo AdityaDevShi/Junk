@@ -37,7 +37,10 @@ export const api = {
   listIssues: () => http<{ issues: Issue[] }>("/issues").then((r) => r.issues),
   getIssue: (id: string) => http<Issue>(`/issues/${id}`),
   reportIssue: (input: ReportInput) =>
-    http<Issue>("/issues", { method: "POST", body: JSON.stringify(input) }),
+    http<Issue & { merged?: boolean; alreadyReported?: boolean }>("/issues", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
   updateStatus: (id: string, status: string, by?: string) =>
     http<Issue>(`/issues/${id}/status`, {
       method: "PATCH",
