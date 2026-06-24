@@ -15,38 +15,24 @@ export default function HomePage() {
   const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
 
   useEffect(() => {
-    let alive = true;
-
-    const load = (initial = false) => {
-      api
-        .listIssues()
-        .then((d) => {
-          if (alive) setIssues(d);
-        })
-        .catch((e) => {
-          if (alive && initial) setError(e instanceof Error ? e.message : "Failed to load");
-        })
-        .finally(() => {
-          if (alive && initial) setLoading(false);
-        });
-    };
-
-    load(true);
+    // Real-time: live Firestore listener — new reports appear for everyone instantly.
+    const unsub = api.subscribeIssues(
+      (d) => {
+        setIssues(d);
+        setLoading(false);
+      },
+      (e) => {
+        setError(e instanceof Error ? e.message : "Failed to load");
+        setLoading(false);
+      }
+    );
 
     // Live location (permission) for the "you are here" marker + locate button.
     getCurrentPosition()
-      .then((p) => {
-        if (alive) setUserLoc([p.lat, p.lng]);
-      })
+      .then((p) => setUserLoc([p.lat, p.lng]))
       .catch(() => {});
 
-    // Near-real-time: silently refresh the map/feed every 8s.
-    const timer = setInterval(() => load(false), 8000);
-
-    return () => {
-      alive = false;
-      clearInterval(timer);
-    };
+    return () => unsub();
   }, []);
 
   const open = issues.filter((i) => i.status !== "resolved").length;
