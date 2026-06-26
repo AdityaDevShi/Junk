@@ -11,11 +11,14 @@ export default function LeaderboardPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    api
-      .listIssues()
-      .then(setIssues)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const unsub = api.subscribeIssues(
+      (d) => {
+        setIssues(d);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+    return () => unsub();
   }, []);
 
   if (loading) return <Loader />;

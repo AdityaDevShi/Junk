@@ -18,26 +18,22 @@ export default function GovPanelPage() {
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Live: the dashboard updates as citizens report and as colleagues act.
   useEffect(() => {
-    void load();
+    const unsub = api.subscribeIssues(
+      (d) => {
+        setIssues(d);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+    return () => unsub();
   }, []);
-
-  async function load() {
-    setLoading(true);
-    try {
-      setIssues(await api.listIssues());
-    } catch {
-      /* ignore for demo */
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function setStatus(id: string, status: string) {
     setBusyId(id);
     try {
       await api.updateStatus(id, status, authorityName);
-      await load();
     } finally {
       setBusyId(null);
     }
@@ -57,7 +53,6 @@ export default function GovPanelPage() {
     try {
       const c = await compressImage(file);
       await api.resolveIssue(id, c.base64, "image/jpeg", authorityName);
-      await load();
     } finally {
       setBusyId(null);
       setResolvingId(null);

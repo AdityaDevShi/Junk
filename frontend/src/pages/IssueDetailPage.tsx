@@ -17,14 +17,12 @@ export default function IssueDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    api
-      .getIssue(id)
-      .then((data) => {
-        setIssue(data);
-        setComplaint(data.complaintDraft ?? null);
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"))
-      .finally(() => setLoading(false));
+    const unsub = api.subscribeIssue(id, (data) => {
+      setIssue(data);
+      setComplaint(data?.complaintDraft ?? null);
+      setLoading(false);
+    });
+    return () => unsub();
   }, [id]);
 
   async function generateComplaint() {

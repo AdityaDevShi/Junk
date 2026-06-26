@@ -112,6 +112,12 @@ export const api = {
     );
   },
 
+  subscribeIssue(id: string, cb: (issue: Issue | null) => void) {
+    return onSnapshot(doc(db, COLL, id), (snap) =>
+      cb(snap.exists() ? ({ id: snap.id, ...(snap.data() as object) } as Issue) : null)
+    );
+  },
+
   async listIssues(): Promise<Issue[]> {
     const snap = await getDocs(
       query(collection(db, COLL), orderBy("createdAt", "desc"), limit(200))
