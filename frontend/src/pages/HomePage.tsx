@@ -35,9 +35,10 @@ export default function HomePage() {
         setLoading(false);
       }
     );
-    requestLocation();
+    // Don't auto-request location on load — Chrome suppresses gesture-less
+    // permission prompts. We ask only when the user clicks "Use my location".
     return () => unsub();
-  }, [requestLocation]);
+  }, []);
 
   const open = issues.filter((i) => i.status !== "resolved").length;
   const resolved = issues.length - open;
@@ -76,11 +77,14 @@ export default function HomePage() {
         </div>
       </div>
 
-      {locDenied && view === "map" && (
+      {!userLoc && view === "map" && (
         <div className="loc-hint">
-          📍 Location is off — showing the default area.{" "}
+          📍{" "}
+          {locDenied
+            ? "Location is blocked — allow it (lock icon → Location), then:"
+            : "See what's happening around you."}{" "}
           <button className="link-btn" onClick={requestLocation}>
-            Enable location
+            Use my location
           </button>
         </div>
       )}
