@@ -551,6 +551,11 @@ p {
   padding: 1.5rem;
   text-align: center;
 }
+.confirmed-note {
+  color: var(--sev-low);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
 .preview-wrap {
   margin: 1rem 0;
   text-align: center;

@@ -4,15 +4,18 @@ import { api } from "../lib/api";
 import type { Issue } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
 import { Loader } from "../components/Loader";
+import { useAuth } from "../lib/auth";
 
 export default function IssueDetailPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [issue, setIssue] = useState<Issue | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [complaint, setComplaint] = useState<string | null>(null);
   const [drafting, setDrafting] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -51,6 +54,19 @@ export default function IssueDetailPage() {
     }
   }
 
+  async function corroborate() {
+    if (!id || !user) return;
+    setConfirming(true);
+    try {
+      await api.addCorroboration(id, user.uid);
+      // the live subscription refreshes the issue (count + severity)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to confirm");
+    } finally {
+      setConfirming(false);
+    }
+  }
+
   if (loading) return <Loader label="Loading issue…" />;
   if (error) return <div className="error-box">{error}</div>;
   if (!issue)
@@ -62,6 +78,9 @@ export default function IssueDetailPage() {
         </Link>
       </div>
     );
+
+  const confirmed =
+    !!user && (issue.reporterId === user.uid || (issue.corroborators || []).includes(user.uid));
 
   return (
     <div className="detail">
@@ -86,6 +105,23 @@ export default function IssueDetailPage() {
         Reported by {issue.reporterName} · {issue.reportCount} report
         {issue.reportCount > 1 ? "s" : ""}
       </p>
+
+      {issue.status !== "resolved" &&
+        (!user ? (
+          <Link to="/login" className="btn btn-ghost btn-sm">
+            Sign in to confirm you've seen this
+          </Link>
+        ) : confirmed ? (
+          <p className="confirmed-note">✓ You've confirmed this issue</p>
+        ) : (
+          <button
+            className="btn btn-ghost btn-sm"
+            disabled={confirming}
+            onClick={() => void corroborate()}
+          >
+            {confirming ? "Confirming…" : "👀 I see this too"}
+          </button>
+        ))}
 
       {issue.status === "resolved" && (
         <div className="beforeafter">

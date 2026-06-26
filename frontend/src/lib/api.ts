@@ -206,6 +206,20 @@ export const api = {
     return getIssue(id);
   },
 
+  // "I see this too" — adds a corroboration and escalates priority, unless the
+  // user already reported or confirmed this issue.
+  async addCorroboration(
+    id: string,
+    reporterId: string
+  ): Promise<{ issue: Issue; already: boolean }> {
+    const issue = await getIssue(id);
+    const already =
+      issue.reporterId === reporterId || (issue.corroborators || []).includes(reporterId);
+    if (already) return { issue, already: true };
+    const updated = await corroborate(id, reporterId);
+    return { issue: updated, already: false };
+  },
+
   async draftComplaint(id: string): Promise<{ complaintDraft: string; issue: Issue }> {
     const issue = await getIssue(id);
     const complaintDraft = await draftComplaint(issue);
