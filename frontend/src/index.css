@@ -556,6 +556,13 @@ p {
   font-weight: 600;
   font-size: 0.9rem;
 }
+.voice-btn {
+  margin-top: 0.5rem;
+}
+.voice-btn.listening {
+  color: var(--sev-critical);
+  border-color: var(--sev-critical);
+}
 .preview-wrap {
   margin: 1rem 0;
   text-align: center;

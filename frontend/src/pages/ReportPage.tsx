@@ -8,6 +8,7 @@ import { api } from "../lib/api";
 import { SeverityBadge, categoryLabel } from "../components/badges";
 import { Loader } from "../components/Loader";
 import { CameraCapture } from "../components/CameraCapture";
+import { VoiceButton } from "../components/VoiceButton";
 import type { Issue, IssueLocation } from "../types";
 
 type Phase = "capture" | "submitting" | "done" | "error";
@@ -254,6 +255,7 @@ export default function ReportPage() {
           placeholder="e.g. Big pothole near the metro gate, very dangerous at night"
           rows={3}
         />
+        <VoiceButton onText={(t) => setNote((n) => (n ? n.trim() + " " + t : t))} />
       </div>
 
       {location ? (
