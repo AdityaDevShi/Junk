@@ -3,22 +3,36 @@ import { api } from "../lib/api";
 import type { Issue } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
 import { compressImage } from "../lib/image";
+import { getLocation } from "../lib/geo";
 import { Loader } from "../components/Loader";
 import { useAuth } from "../lib/auth";
 
 const SEV_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
 
+function norm(s?: string | null) {
+  return (s || "").trim().toLowerCase();
+}
+// Lenient city match (handles "Bengaluru" vs "Bengaluru Urban", etc.)
+function sameCity(a?: string | null, b?: string | null) {
+  const x = norm(a);
+  const y = norm(b);
+  if (!x || !y) return false;
+  return x === y || x.includes(y) || y.includes(x);
+}
+
 export default function GovPanelPage() {
-  const { user } = useAuth();
-  const authorityName = user?.displayName || user?.email || "Authority";
+  const { user, profile, saveProfile } = useAuth();
+  const authorityName = profile?.displayName || user?.displayName || user?.email || "Authority";
+  const jurisdiction = profile?.jurisdiction;
 
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [cityInput, setCityInput] = useState("");
+  const [detecting, setDetecting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Live: the dashboard updates as citizens report and as colleagues act.
   useEffect(() => {
     const unsub = api.subscribeIssues(
       (d) => {
@@ -29,6 +43,23 @@ export default function GovPanelPage() {
     );
     return () => unsub();
   }, []);
+
+  async function detectJurisdiction() {
+    setDetecting(true);
+    try {
+      const loc = await getLocation();
+      if (loc.city) await saveProfile({ jurisdiction: loc.city });
+      else if (loc.address) await saveProfile({ jurisdiction: loc.address.split(",")[0] });
+    } catch {
+      /* user denied location */
+    } finally {
+      setDetecting(false);
+    }
+  }
+
+  async function saveManualCity() {
+    if (cityInput.trim()) await saveProfile({ jurisdiction: cityInput.trim() });
+  }
 
   async function setStatus(id: string, status: string) {
     setBusyId(id);
@@ -59,22 +90,66 @@ export default function GovPanelPage() {
     }
   }
 
-  const sorted = [...issues].sort(
+  // ---- First-time: set jurisdiction ----
+  if (!jurisdiction) {
+    return (
+      <div className="gov">
+        <div className="gov-banner">
+          🏛️ Authority Dashboard — <span>{authorityName}</span>
+        </div>
+        <div className="card juris-setup">
+          <h2>Set your jurisdiction</h2>
+          <p className="muted">
+            You'll only see and manage issues in your own municipal area — no other city's
+            reports.
+          </p>
+          <button
+            className="btn btn-primary btn-block"
+            disabled={detecting}
+            onClick={() => void detectJurisdiction()}
+          >
+            {detecting ? "Detecting…" : "📍 Use my current location"}
+          </button>
+          <div className="divider">
+            <span>or enter manually</span>
+          </div>
+          <input
+            className="input"
+            placeholder="City (e.g. Bengaluru)"
+            value={cityInput}
+            onChange={(e) => setCityInput(e.target.value)}
+          />
+          <button className="btn btn-ghost btn-block" onClick={() => void saveManualCity()}>
+            Save jurisdiction
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const scoped = issues.filter((i) => sameCity(i.location?.city, jurisdiction));
+  const sorted = [...scoped].sort(
     (a, b) => (SEV_RANK[b.severity] ?? 0) - (SEV_RANK[a.severity] ?? 0)
   );
-  const open = issues.filter((i) => i.status !== "resolved").length;
-  const resolved = issues.length - open;
+  const open = scoped.filter((i) => i.status !== "resolved").length;
+  const resolved = scoped.length - open;
 
   return (
     <div className="gov">
       <div className="gov-banner">
-        🏛️ Authority Dashboard — <span>{authorityName}</span>
+        🏛️ Authority Dashboard — <span>{authorityName}</span> · {jurisdiction}
+        <button
+          className="link-btn juris-change"
+          onClick={() => void saveProfile({ jurisdiction: "" })}
+        >
+          change
+        </button>
       </div>
 
       <section className="stats">
         <div className="stat">
-          <span className="stat-num">{issues.length}</span>
-          <span className="stat-label">Total</span>
+          <span className="stat-num">{scoped.length}</span>
+          <span className="stat-label">In {jurisdiction}</span>
         </div>
         <div className="stat">
           <span className="stat-num warn">{open}</span>
@@ -96,9 +171,9 @@ export default function GovPanelPage() {
       />
 
       {loading && <Loader label="Loading reports…" />}
-      {!loading && issues.length === 0 && (
+      {!loading && scoped.length === 0 && (
         <div className="empty">
-          <p>No reports yet.</p>
+          <p>No reports in {jurisdiction} yet.</p>
         </div>
       )}
 

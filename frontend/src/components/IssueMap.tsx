@@ -45,16 +45,21 @@ function getCenter(issues: Issue[]): [number, number] {
   return [lat, lng];
 }
 
-// Fit the map to all reported issues so the markers/areas are always visible.
-function FitBounds({ issues }: { issues: Issue[] }) {
+// Centre the map on the user's location when we have it (location-aware);
+// otherwise fit to all reported issues.
+function MapView({ issues, userLoc }: { issues: Issue[]; userLoc: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
+    if (userLoc) {
+      map.setView(userLoc, 13);
+      return;
+    }
     const pts = issues
       .filter((i) => i.location)
       .map((i) => [i.location!.lat, i.location!.lng] as [number, number]);
     if (pts.length >= 2) map.fitBounds(pts, { padding: [50, 50], maxZoom: 15 });
     else if (pts.length === 1) map.setView(pts[0], 14);
-  }, [issues, map]);
+  }, [issues, userLoc, map]);
   return null;
 }
 
@@ -76,7 +81,7 @@ export default function IssueMap({
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <FitBounds issues={issues} />
+        <MapView issues={issues} userLoc={userLoc} />
 
         {userLoc && (
           <Marker position={userLoc} icon={userIcon()}>

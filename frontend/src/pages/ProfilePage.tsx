@@ -6,6 +6,7 @@ export default function ProfilePage() {
   const { user, profile, saveProfile, signOut } = useAuth();
   const [name, setName] = useState(profile?.displayName ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
+  const [city, setCity] = useState(profile?.jurisdiction ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -26,7 +27,11 @@ export default function ProfilePage() {
     setSaving(true);
     setSaved(false);
     try {
-      await saveProfile({ displayName: name.trim() || "Citizen", phone: phone.trim() });
+      await saveProfile({
+        displayName: name.trim() || "Citizen",
+        phone: phone.trim(),
+        jurisdiction: city.trim(),
+      });
       setSaved(true);
     } finally {
       setSaving(false);
@@ -66,6 +71,16 @@ export default function ProfilePage() {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="Leave blank to stay private"
+        />
+      </div>
+
+      <div className="field">
+        <label>Home city (optional)</label>
+        <input
+          className="input"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          placeholder="e.g. Bengaluru — centres your map"
         />
       </div>
 

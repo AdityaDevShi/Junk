@@ -9,6 +9,9 @@ export interface Profile {
   phone?: string;
   photoURL?: string | null;
   anonymous: boolean;
+  // Municipal area. For authorities this scopes their dashboard; for citizens
+  // it's their home city (used to centre the map).
+  jurisdiction?: string;
 }
 
 // Create the user's profile doc on first sign-in; return it otherwise.
