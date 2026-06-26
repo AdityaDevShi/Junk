@@ -5,7 +5,25 @@ import type { Issue } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
 import IssueMap from "../components/IssueMap";
 import { Loader } from "../components/Loader";
-import { getCurrentPosition } from "../lib/geo";
+import { getCurrentPosition, geocodeSearch } from "../lib/geo";
+
+type Place = { lat: number; lng: number; label: string };
+const RADIUS_KM = 5;
+
+function distKm(a: [number, number], b: [number, number]): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b[0] - a[0]);
+  const dLng = toRad(b[1] - a[1]);
+  const lat1 = toRad(a[0]);
+  const lat2 = toRad(b[0]);
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function shortLabel(label: string): string {
+  return label.split(",").slice(0, 2).join(",").trim();
+}
 
 export default function HomePage() {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -14,6 +32,10 @@ export default function HomePage() {
   const [view, setView] = useState<"map" | "list">("map");
   const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
   const [locDenied, setLocDenied] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Place[]>([]);
+  const [target, setTarget] = useState<Place | null>(null);
 
   const requestLocation = useCallback(() => {
     getCurrentPosition()
@@ -35,13 +57,43 @@ export default function HomePage() {
         setLoading(false);
       }
     );
-    // Don't auto-request location on load — Chrome suppresses gesture-less
-    // permission prompts. We ask only when the user clicks "Use my location".
     return () => unsub();
   }, []);
 
+  // Debounced place search.
+  useEffect(() => {
+    if (searchQuery.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    const t = setTimeout(() => {
+      geocodeSearch(searchQuery).then(setSuggestions);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  function selectPlace(p: Place) {
+    setTarget(p);
+    setSuggestions([]);
+    setSearchQuery("");
+  }
+  function clearSearch() {
+    setTarget(null);
+    setSearchQuery("");
+    setSuggestions([]);
+  }
+
   const open = issues.filter((i) => i.status !== "resolved").length;
   const resolved = issues.length - open;
+
+  const focus: [number, number] | null = target ? [target.lat, target.lng] : null;
+  const areaCount = target
+    ? issues.filter(
+        (i) =>
+          i.location &&
+          distKm([i.location.lat, i.location.lng], [target.lat, target.lng]) <= RADIUS_KM
+      ).length
+    : 0;
 
   return (
     <div className="home">
@@ -77,7 +129,36 @@ export default function HomePage() {
         </div>
       </div>
 
-      {!userLoc && view === "map" && (
+      {view === "map" && (
+        <div className="map-search">
+          <input
+            className="input search-input"
+            placeholder="🔍 Search a place (e.g. Indiranagar, or Mumbai)…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {suggestions.length > 0 && (
+            <ul className="search-suggestions">
+              {suggestions.map((s, i) => (
+                <li key={i} onClick={() => selectPlace(s)}>
+                  {s.label}
+                </li>
+              ))}
+            </ul>
+          )}
+          {target && (
+            <div className="search-result">
+              📍 {shortLabel(target.label)} — <b>{areaCount}</b> issue
+              {areaCount !== 1 ? "s" : ""} within {RADIUS_KM} km
+              <button className="link-btn" onClick={clearSearch}>
+                clear
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!userLoc && !target && view === "map" && (
         <div className="loc-hint">
           📍{" "}
           {locDenied
@@ -95,7 +176,7 @@ export default function HomePage() {
       {!loading &&
         !error &&
         (view === "map" ? (
-          <IssueMap issues={issues} userLoc={userLoc} onLocate={requestLocation} />
+          <IssueMap issues={issues} userLoc={userLoc} focus={focus} onLocate={requestLocation} />
         ) : issues.length === 0 ? (
           <div className="empty">
             <p>No issues reported yet. Be the first to report one! 🦸</p>

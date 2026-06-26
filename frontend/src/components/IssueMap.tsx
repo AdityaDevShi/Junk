@@ -45,11 +45,22 @@ function getCenter(issues: Issue[]): [number, number] {
   return [lat, lng];
 }
 
-// Centre the map on the user's location when we have it (location-aware);
-// otherwise fit to all reported issues.
-function MapView({ issues, userLoc }: { issues: Issue[]; userLoc: [number, number] | null }) {
+// Priority: searched place > user's location > fit to all issues.
+function MapView({
+  issues,
+  userLoc,
+  focus,
+}: {
+  issues: Issue[];
+  userLoc: [number, number] | null;
+  focus: [number, number] | null;
+}) {
   const map = useMap();
   useEffect(() => {
+    if (focus) {
+      map.setView(focus, 14);
+      return;
+    }
     if (userLoc) {
       map.setView(userLoc, 13);
       return;
@@ -59,21 +70,23 @@ function MapView({ issues, userLoc }: { issues: Issue[]; userLoc: [number, numbe
       .map((i) => [i.location!.lat, i.location!.lng] as [number, number]);
     if (pts.length >= 2) map.fitBounds(pts, { padding: [50, 50], maxZoom: 15 });
     else if (pts.length === 1) map.setView(pts[0], 14);
-  }, [issues, userLoc, map]);
+  }, [issues, userLoc, focus, map]);
   return null;
 }
 
 export default function IssueMap({
   issues,
   userLoc = null,
+  focus = null,
   onLocate,
 }: {
   issues: Issue[];
   userLoc?: [number, number] | null;
+  focus?: [number, number] | null;
   onLocate?: () => void;
 }) {
   const mapRef = useRef<L.Map | null>(null);
-  const initialCenter = userLoc ?? getCenter(issues);
+  const initialCenter = focus ?? userLoc ?? getCenter(issues);
   const withLoc = issues.filter((i) => i.location);
 
   return (
@@ -83,7 +96,7 @@ export default function IssueMap({
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <MapView issues={issues} userLoc={userLoc} />
+        <MapView issues={issues} userLoc={userLoc} focus={focus} />
 
         {userLoc && (
           <Marker position={userLoc} icon={userIcon()}>
