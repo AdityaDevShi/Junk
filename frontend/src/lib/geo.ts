@@ -9,7 +9,8 @@ export function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
     navigator.geolocation.getCurrentPosition(
       (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
       (e) => reject(e),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      // Network-based location is far more reliable on desktops than GPS.
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
     );
   });
 }
@@ -26,7 +27,7 @@ export async function reverseGeocode(
     );
     const data = await res.json();
     const a = data.address ?? {};
-    const city = a.city || a.town || a.village || a.county || a.state_district;
+    const city = a.city || a.town || a.village || a.municipality || a.county || a.state_district;
     return { address: data.display_name, city };
   } catch {
     return {};

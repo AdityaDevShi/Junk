@@ -31,6 +31,7 @@ export default function GovPanelPage() {
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [cityInput, setCityInput] = useState("");
   const [detecting, setDetecting] = useState(false);
+  const [detectError, setDetectError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -46,12 +47,16 @@ export default function GovPanelPage() {
 
   async function detectJurisdiction() {
     setDetecting(true);
+    setDetectError(null);
     try {
       const loc = await getLocation();
-      if (loc.city) await saveProfile({ jurisdiction: loc.city });
-      else if (loc.address) await saveProfile({ jurisdiction: loc.address.split(",")[0] });
+      const city = loc.city || loc.address?.split(",")[0]?.trim();
+      if (city) await saveProfile({ jurisdiction: city });
+      else setDetectError("Got your location but couldn't name the city — please type it below.");
     } catch {
-      /* user denied location */
+      setDetectError(
+        "Couldn't access your location. Allow it in your browser, or type your city below."
+      );
     } finally {
       setDetecting(false);
     }
@@ -110,6 +115,7 @@ export default function GovPanelPage() {
           >
             {detecting ? "Detecting…" : "📍 Use my current location"}
           </button>
+          {detectError && <div className="error-box">{detectError}</div>}
           <div className="divider">
             <span>or enter manually</span>
           </div>

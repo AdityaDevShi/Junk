@@ -66,9 +66,11 @@ function MapView({ issues, userLoc }: { issues: Issue[]; userLoc: [number, numbe
 export default function IssueMap({
   issues,
   userLoc = null,
+  onLocate,
 }: {
   issues: Issue[];
   userLoc?: [number, number] | null;
+  onLocate?: () => void;
 }) {
   const mapRef = useRef<L.Map | null>(null);
   const initialCenter = userLoc ?? getCenter(issues);
@@ -116,11 +118,12 @@ export default function IssueMap({
         ))}
       </MapContainer>
 
-      {userLoc && (
-        <button className="locate-btn" onClick={() => mapRef.current?.setView(userLoc, 15)}>
-          📍 My location
-        </button>
-      )}
+      <button
+        className="locate-btn"
+        onClick={() => (userLoc ? mapRef.current?.setView(userLoc, 15) : onLocate?.())}
+      >
+        📍 My location
+      </button>
 
       <div className="map-legend">
         <div className="lg">

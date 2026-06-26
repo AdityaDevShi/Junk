@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import type { Issue } from "../types";
@@ -13,9 +13,18 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"map" | "list">("map");
   const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
+  const [locDenied, setLocDenied] = useState(false);
+
+  const requestLocation = useCallback(() => {
+    getCurrentPosition()
+      .then((p) => {
+        setUserLoc([p.lat, p.lng]);
+        setLocDenied(false);
+      })
+      .catch(() => setLocDenied(true));
+  }, []);
 
   useEffect(() => {
-    // Real-time: live Firestore listener — new reports appear for everyone instantly.
     const unsub = api.subscribeIssues(
       (d) => {
         setIssues(d);
@@ -26,14 +35,9 @@ export default function HomePage() {
         setLoading(false);
       }
     );
-
-    // Live location (permission) for the "you are here" marker + locate button.
-    getCurrentPosition()
-      .then((p) => setUserLoc([p.lat, p.lng]))
-      .catch(() => {});
-
+    requestLocation();
     return () => unsub();
-  }, []);
+  }, [requestLocation]);
 
   const open = issues.filter((i) => i.status !== "resolved").length;
   const resolved = issues.length - open;
@@ -72,13 +76,22 @@ export default function HomePage() {
         </div>
       </div>
 
+      {locDenied && view === "map" && (
+        <div className="loc-hint">
+          📍 Location is off — showing the default area.{" "}
+          <button className="link-btn" onClick={requestLocation}>
+            Enable location
+          </button>
+        </div>
+      )}
+
       {loading && <Loader label="Loading your neighbourhood…" />}
       {error && <div className="error-box">Couldn't load issues: {error}</div>}
 
       {!loading &&
         !error &&
         (view === "map" ? (
-          <IssueMap issues={issues} userLoc={userLoc} />
+          <IssueMap issues={issues} userLoc={userLoc} onLocate={requestLocation} />
         ) : issues.length === 0 ? (
           <div className="empty">
             <p>No issues reported yet. Be the first to report one! 🦸</p>
