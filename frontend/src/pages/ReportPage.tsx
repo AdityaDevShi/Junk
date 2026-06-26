@@ -26,10 +26,6 @@ export default function ReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ReportResult | null>(null);
 
-  useEffect(() => {
-    void grabLocation();
-  }, []);
-
   // Celebrate a successful report.
   useEffect(() => {
     if (phase === "done") {
@@ -77,6 +73,10 @@ export default function ReportPage() {
   async function submit() {
     if (!base64) {
       setError("Please add a photo first.");
+      return;
+    }
+    if (!location) {
+      setError("Location is required — tap “Use my location” below.");
       return;
     }
     if (!user) return;
@@ -242,24 +242,28 @@ export default function ReportPage() {
         />
       </div>
 
-      <div className="loc-line">
-        {locating
-          ? "📍 Getting your location…"
-          : location
-          ? `📍 ${location.address ?? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`}`
-          : "📍 Location unavailable"}
-        {!locating && (
+      {location ? (
+        <div className="loc-line">
+          📍 {location.address ?? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`}
           <button className="link-btn" onClick={() => void grabLocation()}>
-            refresh
+            update
           </button>
-        )}
-      </div>
+        </div>
+      ) : (
+        <button
+          className="btn btn-ghost btn-block"
+          disabled={locating}
+          onClick={() => void grabLocation()}
+        >
+          {locating ? "Getting location…" : "📍 Use my location (required)"}
+        </button>
+      )}
 
       {error && <div className="error-box">{error}</div>}
 
       <button
         className="btn btn-primary btn-block"
-        disabled={!base64}
+        disabled={!base64 || !location}
         onClick={() => void submit()}
       >
         Submit report

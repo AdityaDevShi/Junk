@@ -131,9 +131,10 @@ export default function HomePage() {
 
       {view === "map" && (
         <div className="map-search">
+          <span className="search-icon">🔍</span>
           <input
             className="input search-input"
-            placeholder="🔍 Search a place (e.g. Indiranagar, or Mumbai)…"
+            placeholder="Search a place (e.g. Indiranagar, or Mumbai)…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
