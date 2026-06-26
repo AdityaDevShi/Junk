@@ -7,6 +7,7 @@ import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
 import { SeverityBadge, categoryLabel } from "../components/badges";
 import { Loader } from "../components/Loader";
+import { CameraCapture } from "../components/CameraCapture";
 import type { Issue, IssueLocation } from "../types";
 
 type Phase = "capture" | "submitting" | "done" | "error";
@@ -25,6 +26,7 @@ export default function ReportPage() {
   const [phase, setPhase] = useState<Phase>("capture");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ReportResult | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
 
   // Celebrate a successful report.
   useEffect(() => {
@@ -43,15 +45,13 @@ export default function ReportPage() {
     try {
       setLocation(await getLocation());
     } catch {
-      /* location is optional — user may deny */
+      /* location is optional to fetch, required to submit */
     } finally {
       setLocating(false);
     }
   }
 
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleImageFile(file: File) {
     try {
       const c = await compressImage(file);
       setPreview(c.dataUrl);
@@ -60,6 +60,11 @@ export default function ReportPage() {
     } catch {
       setError("Couldn't read that image. Try another.");
     }
+  }
+
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) void handleImageFile(file);
   }
 
   function resetForm() {
@@ -104,7 +109,7 @@ export default function ReportPage() {
     }
   }
 
-  // ---- Must be signed in to report ----
+  // ---- Must be signed in ----
   if (!user) {
     return (
       <div className="report-page">
@@ -118,7 +123,7 @@ export default function ReportPage() {
     );
   }
 
-  // ---- Submitting (AI analysis) ----
+  // ---- Submitting ----
   if (phase === "submitting") {
     return (
       <div className="report-page">
@@ -127,7 +132,7 @@ export default function ReportPage() {
     );
   }
 
-  // ---- Success view ----
+  // ---- Success ----
   if (phase === "done" && result) {
     const merged = !!result.merged;
     const already = !!result.alreadyReported;
@@ -203,7 +208,7 @@ export default function ReportPage() {
     );
   }
 
-  // ---- Capture / form view ----
+  // ---- Capture / form ----
   return (
     <div className="report-page">
       <h1>Report an issue</h1>
@@ -221,15 +226,24 @@ export default function ReportPage() {
       {preview ? (
         <div className="preview-wrap">
           <img className="preview" src={preview} alt="preview" />
-          <button className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
-            Retake / choose another
-          </button>
+          <div className="row gap" style={{ justifyContent: "center" }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => setShowCamera(true)}>
+              📷 Retake
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => fileRef.current?.click()}>
+              🖼 Upload
+            </button>
+          </div>
         </div>
       ) : (
-        <button className="capture-tile" onClick={() => fileRef.current?.click()}>
-          <span className="capture-icon">📷</span>
-          <span>Tap to take / upload a photo</span>
-        </button>
+        <div className="capture-actions">
+          <button className="btn btn-primary btn-block" onClick={() => setShowCamera(true)}>
+            📷 Take a photo
+          </button>
+          <button className="btn btn-ghost btn-block" onClick={() => fileRef.current?.click()}>
+            🖼 Upload from device
+          </button>
+        </div>
       )}
 
       <div className="field">
@@ -272,6 +286,16 @@ export default function ReportPage() {
       <Link to="/" className="link-btn center">
         Cancel
       </Link>
+
+      {showCamera && (
+        <CameraCapture
+          onCapture={(f) => {
+            setShowCamera(false);
+            void handleImageFile(f);
+          }}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
     </div>
   );
 }

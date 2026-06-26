@@ -495,6 +495,62 @@ p {
 .capture-icon {
   font-size: 2.6rem;
 }
+.capture-actions {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+/* ---- In-app camera ---- */
+.camera-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.camera-box {
+  width: 100%;
+  max-width: 460px;
+}
+.camera-video {
+  width: 100%;
+  border-radius: var(--radius);
+  background: #000;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+.camera-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.9rem;
+}
+.camera-controls .btn {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: transparent;
+}
+.camera-shutter {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+}
+.camera-shutter:active {
+  transform: scale(0.94);
+}
+.camera-error {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+}
 .preview-wrap {
   margin: 1rem 0;
   text-align: center;
