@@ -635,6 +635,148 @@ p {
   text-align: right;
   font-weight: 700;
 }
+
+/* ---- Impact dashboard (animated) ---- */
+.leaderboard {
+  max-width: 1000px;
+}
+.impact-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+@media (max-width: 820px) {
+  .impact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.impact-card h2,
+.lb-card h2 {
+  font-size: 1.15rem;
+}
+.impact-top {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  margin: 1rem 0 1.4rem;
+  flex-wrap: wrap;
+}
+.kpis {
+  display: grid;
+  gap: 0.55rem;
+  flex: 1;
+  min-width: 150px;
+}
+.kpi {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+.kpi strong {
+  font-size: 1.5rem;
+  min-width: 2ch;
+  text-align: right;
+}
+.kpi span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+/* radial gauge */
+.donut {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  flex-shrink: 0;
+}
+.donut svg {
+  width: 130px;
+  height: 130px;
+  transform: rotate(-90deg);
+}
+.donut-track {
+  fill: none;
+  stroke: var(--bg-tint);
+  stroke-width: 12;
+}
+.donut-fill {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.donut-center strong {
+  font-size: 1.55rem;
+  line-height: 1;
+}
+.donut-center span {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* vertical animated bar chart */
+.vbars {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 200px;
+  padding-top: 1.4rem;
+}
+.vgrid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+  z-index: 0;
+}
+.vbar-col {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+.vbar-track {
+  width: 100%;
+  max-width: 44px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+.vbar-fill {
+  width: 100%;
+  min-height: 3px;
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+  border-radius: 8px 8px 0 0;
+  transition: height 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vbar-val {
+  font-size: 0.8rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+}
+.vbar-label {
+  font-size: 0.66rem;
+  color: var(--muted);
+  margin-top: 0.45rem;
+  text-align: center;
+  line-height: 1.1;
+}
 .preview-wrap {
   margin: 1rem 0;
   text-align: center;
