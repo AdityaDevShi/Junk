@@ -641,6 +641,32 @@ p {
 .bell-item.unread {
   font-weight: 600;
 }
+
+/* ---- Mobile header + fuller dashboard ---- */
+@media (max-width: 560px) {
+  .app-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.6rem 0.85rem;
+  }
+  .brand {
+    font-size: 1.02rem;
+  }
+  .nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+  .nav a {
+    font-size: 0.86rem;
+  }
+  .rep-text {
+    display: none;
+  }
+  .app-main {
+    padding: 0.9rem 0.8rem 2.2rem;
+  }
+}
 .voice-btn {
   margin-top: 0.5rem;
 }

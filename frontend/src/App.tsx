@@ -34,7 +34,7 @@ export default function App() {
             </Link>
           )}
           <Link to="/report" className="btn btn-primary btn-sm">
-            ＋ Report
+            ＋<span className="rep-text">&nbsp;Report</span>
           </Link>
           <NotificationBell />
           {user ? (
