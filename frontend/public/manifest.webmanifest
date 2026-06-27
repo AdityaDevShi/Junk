@@ -1,0 +1,14 @@
+{
+  "name": "MuniPeople",
+  "short_name": "MuniPeople",
+  "description": "Report and track civic issues in your area.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3ebdd",
+  "theme_color": "#0f8b80",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
