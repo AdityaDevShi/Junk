@@ -724,57 +724,74 @@ p {
   color: var(--muted);
 }
 
-/* vertical animated bar chart */
-.vbars {
+/* vertical animated bar chart with Y-axis */
+.chart {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 0.6rem;
+}
+.y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 180px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: right;
+  min-width: 14px;
+}
+.plot {
+  flex: 1;
+  min-width: 0;
+}
+.plot-area {
   position: relative;
+  height: 180px;
+}
+.gridlines {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.gridline {
+  height: 1px;
+  background: var(--border);
+}
+.bars-row {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: flex-end;
   gap: 0.5rem;
-  height: 200px;
-  padding-top: 1.4rem;
 }
-.vgrid {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--border);
-  z-index: 0;
-}
-.vbar-col {
-  position: relative;
-  z-index: 1;
+.bar-col {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-}
-.vbar-track {
-  width: 100%;
-  max-width: 44px;
   height: 100%;
   display: flex;
   align-items: flex-end;
+  justify-content: center;
 }
-.vbar-fill {
+.bar-fill {
   width: 100%;
+  max-width: 40px;
   min-height: 3px;
   background: linear-gradient(180deg, var(--primary), var(--primary-dark));
-  border-radius: 8px 8px 0 0;
+  border-radius: 7px 7px 0 0;
   transition: height 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.vbar-val {
-  font-size: 0.8rem;
-  font-weight: 800;
-  margin-bottom: 0.3rem;
+.x-labels {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
 }
-.vbar-label {
+.x-labels span {
+  flex: 1;
+  text-align: center;
   font-size: 0.66rem;
   color: var(--muted);
-  margin-top: 0.45rem;
-  text-align: center;
   line-height: 1.1;
 }
 .preview-wrap {

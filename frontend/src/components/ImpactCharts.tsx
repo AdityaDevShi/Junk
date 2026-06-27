@@ -76,7 +76,13 @@ export function ImpactCharts({ issues }: { issues: Issue[] }) {
   )
     .sort((a, b) => b[1] - a[1])
     .slice(0, 7);
-  const maxCat = Math.max(1, ...byCat.map(([, n]) => n));
+
+  const top = Math.max(1, ...byCat.map(([, n]) => n));
+  const divisions = top <= 5 ? top : 4;
+  // Y-axis ticks, top → bottom.
+  const ticks = Array.from({ length: divisions + 1 }, (_, i) =>
+    Math.round((top * (divisions - i)) / divisions)
+  );
 
   const [grow, setGrow] = useState(false);
   useEffect(() => {
@@ -102,25 +108,40 @@ export function ImpactCharts({ issues }: { issues: Issue[] }) {
       {byCat.length === 0 ? (
         <p className="muted small">No data yet.</p>
       ) : (
-        <div className="vbars">
-          {[1, 0.5, 0].map((g) => (
-            <div className="vgrid" key={g} style={{ bottom: `calc(28px + ${g} * (100% - 48px))` }} />
-          ))}
-          {byCat.map(([cat, n], idx) => (
-            <div className="vbar-col" key={cat}>
-              <span className="vbar-val">{n}</span>
-              <div className="vbar-track">
-                <div
-                  className="vbar-fill"
-                  style={{
-                    height: grow ? `${(n / maxCat) * 100}%` : "0%",
-                    transitionDelay: `${idx * 70}ms`,
-                  }}
-                />
+        <div className="chart">
+          <div className="y-axis">
+            {ticks.map((t, i) => (
+              <span key={i}>{t}</span>
+            ))}
+          </div>
+          <div className="plot">
+            <div className="plot-area">
+              <div className="gridlines">
+                {ticks.map((_, i) => (
+                  <div className="gridline" key={i} />
+                ))}
               </div>
-              <span className="vbar-label">{categoryLabel(cat)}</span>
+              <div className="bars-row">
+                {byCat.map(([cat, n], idx) => (
+                  <div className="bar-col" key={cat}>
+                    <div
+                      className="bar-fill"
+                      title={`${n}`}
+                      style={{
+                        height: grow ? `${(n / top) * 100}%` : "0%",
+                        transitionDelay: `${idx * 70}ms`,
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+            <div className="x-labels">
+              {byCat.map(([cat]) => (
+                <span key={cat}>{categoryLabel(cat)}</span>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </section>
