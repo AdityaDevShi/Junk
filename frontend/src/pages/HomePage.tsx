@@ -6,6 +6,7 @@ import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
 import IssueMap from "../components/IssueMap";
 import { Loader } from "../components/Loader";
 import { getCurrentPosition, geocodeSearch } from "../lib/geo";
+import { CATEGORIES } from "../lib/gemini";
 
 type Place = { lat: number; lng: number; label: string };
 const RADIUS_KM = 5;
@@ -36,6 +37,9 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Place[]>([]);
   const [target, setTarget] = useState<Place | null>(null);
+  const [fCat, setFCat] = useState("all");
+  const [fSev, setFSev] = useState("all");
+  const [fStatus, setFStatus] = useState("all");
 
   const requestLocation = useCallback(() => {
     getCurrentPosition()
@@ -86,9 +90,16 @@ export default function HomePage() {
   const open = issues.filter((i) => i.status !== "resolved").length;
   const resolved = issues.length - open;
 
+  const shown = issues.filter(
+    (i) =>
+      (fCat === "all" || i.category === fCat) &&
+      (fSev === "all" || i.severity === fSev) &&
+      (fStatus === "all" || i.status === fStatus)
+  );
+
   const focus: [number, number] | null = target ? [target.lat, target.lng] : null;
   const areaCount = target
-    ? issues.filter(
+    ? shown.filter(
         (i) =>
           i.location &&
           distKm([i.location.lat, i.location.lng], [target.lat, target.lng]) <= RADIUS_KM
@@ -127,6 +138,32 @@ export default function HomePage() {
             <b>{resolved}</b> resolved
           </span>
         </div>
+      </div>
+
+      <div className="filter-bar">
+        <select value={fCat} onChange={(e) => setFCat(e.target.value)}>
+          <option value="all">All types</option>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {categoryLabel(c)}
+            </option>
+          ))}
+        </select>
+        <select value={fSev} onChange={(e) => setFSev(e.target.value)}>
+          <option value="all">All severity</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+          <option value="all">All status</option>
+          <option value="reported">Reported</option>
+          <option value="acknowledged">Acknowledged</option>
+          <option value="in_progress">In progress</option>
+          <option value="resolved">Resolved</option>
+          <option value="reopened">Reopened</option>
+        </select>
       </div>
 
       {view === "map" && (
@@ -177,10 +214,10 @@ export default function HomePage() {
       {!loading &&
         !error &&
         (view === "map" ? (
-          <IssueMap issues={issues} userLoc={userLoc} focus={focus} onLocate={requestLocation} />
-        ) : issues.length === 0 ? (
+          <IssueMap issues={shown} userLoc={userLoc} focus={focus} onLocate={requestLocation} />
+        ) : shown.length === 0 ? (
           <div className="empty">
-            <p>No issues reported yet. Be the first to report one! 🦸</p>
+            <p>No issues match these filters.</p>
             <Link to="/report" className="btn btn-primary">
               Report an issue
             </Link>
@@ -188,7 +225,7 @@ export default function HomePage() {
         ) : (
           <section className="feed">
             <div className="cards">
-              {issues.map((issue) => (
+              {shown.map((issue) => (
                 <Link key={issue.id} to={`/issue/${issue.id}`} className="issue-card">
                   {issue.imageData && (
                     <img className="issue-thumb" src={issue.imageData} alt={issue.title} />
