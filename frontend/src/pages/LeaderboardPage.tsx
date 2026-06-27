@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import type { Issue } from "../types";
 import { useAuth } from "../lib/auth";
 import { computeUserScore, cityLeaderboard } from "../lib/score";
+import { categoryLabel } from "../components/badges";
 import { Loader } from "../components/Loader";
 
 export default function LeaderboardPage() {
@@ -25,6 +26,19 @@ export default function LeaderboardPage() {
 
   const score = computeUserScore(issues, user?.uid ?? "");
   const cities = cityLeaderboard(issues);
+
+  const byCat = Object.entries(
+    issues.reduce<Record<string, number>>((m, i) => {
+      m[i.category] = (m[i.category] || 0) + 1;
+      return m;
+    }, {})
+  )
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8);
+  const maxCat = Math.max(1, ...byCat.map(([, n]) => n));
+  const resolvedCount = issues.filter((i) => i.status === "resolved").length;
+  const open = issues.length - resolvedCount;
+  const resolvedRate = issues.length ? Math.round((resolvedCount / issues.length) * 100) : 0;
 
   return (
     <div className="leaderboard">
@@ -56,6 +70,37 @@ export default function LeaderboardPage() {
             {score.toNext} pts to <strong>{score.nextTier}</strong>
           </p>
         )}
+      </section>
+
+      <section className="card stats-card">
+        <h2>📊 City snapshot</h2>
+        <div className="snapshot-row">
+          <div>
+            <strong>{issues.length}</strong>
+            <span>Total</span>
+          </div>
+          <div>
+            <strong>{open}</strong>
+            <span>Open</span>
+          </div>
+          <div>
+            <strong>{resolvedRate}%</strong>
+            <span>Resolved</span>
+          </div>
+        </div>
+        <h3 className="bars-title">By category</h3>
+        <div className="bars">
+          {byCat.length === 0 && <p className="muted small">No data yet.</p>}
+          {byCat.map(([cat, n]) => (
+            <div key={cat} className="bar-row">
+              <span className="bar-label">{categoryLabel(cat)}</span>
+              <span className="bar-track">
+                <span className="bar-fill" style={{ width: `${(n / maxCat) * 100}%` }} />
+              </span>
+              <span className="bar-val">{n}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section>
