@@ -30,6 +30,9 @@ export interface Issue {
   corroborators: string[];
   complaintDraft: string | null;
   confidence?: number | null;
+  fixVerified?: boolean | null;
+  fixNote?: string;
+  fixConfidence?: number | null;
   createdAt?: { _seconds: number } | null;
   updatedAt?: { _seconds: number } | null;
   resolvedAt?: { _seconds: number } | null;

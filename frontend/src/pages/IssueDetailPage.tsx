@@ -140,6 +140,15 @@ export default function IssueDetailPage() {
         </div>
       )}
 
+      {issue.status === "resolved" &&
+        issue.fixVerified !== undefined &&
+        issue.fixVerified !== null && (
+          <div className={`fix-verdict ${issue.fixVerified ? "ok" : "warn"}`}>
+            {issue.fixVerified ? "✓ AI-verified fix" : "⚠ Fix may need review"}
+            {issue.fixNote && <span className="fix-note"> — {issue.fixNote}</span>}
+          </div>
+        )}
+
       {issue.status === "resolved" && (
         <button className="btn btn-ghost" disabled={busy} onClick={() => void reopen()}>
           ⚠ Not actually fixed? Reopen

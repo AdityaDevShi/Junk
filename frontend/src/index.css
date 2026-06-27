@@ -667,6 +667,28 @@ p {
     padding: 0.9rem 0.8rem 2.2rem;
   }
 }
+
+/* ---- AI fix verification badge ---- */
+.fix-verdict {
+  display: inline-block;
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+.fix-verdict.ok {
+  background: #dcfce7;
+  color: var(--sev-low);
+}
+.fix-verdict.warn {
+  background: #fee2e2;
+  color: var(--sev-critical);
+}
+.fix-note {
+  font-weight: 500;
+  opacity: 0.85;
+}
 .voice-btn {
   margin-top: 0.5rem;
 }

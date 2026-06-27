@@ -16,7 +16,7 @@ import {
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { classifyIssue, draftComplaint } from "./gemini";
+import { classifyIssue, draftComplaint, verifyFix } from "./gemini";
 import type { Issue, Severity } from "../types";
 
 const COLL = "issues";
@@ -165,6 +165,12 @@ export const api = {
       note: input.note,
     });
 
+    if (classified.isCivicIssue === false) {
+      throw new Error(
+        "That photo doesn't look like a civic issue — please capture the actual problem (pothole, garbage, leak, broken streetlight, etc.)."
+      );
+    }
+
     const dup = await findOpenDuplicate(classified.category, input.location);
     if (dup) {
       const already =
@@ -225,8 +231,27 @@ export const api = {
       updatedAt: serverTimestamp(),
     });
     const issue = await getIssue(id);
+    // Best-effort AI before/after verification.
+    try {
+      const beforeB64 = (issue.imageData || "").split(",")[1];
+      if (beforeB64 && afterImageBase64) {
+        const v = await verifyFix(
+          { base64: beforeB64, mimeType: "image/jpeg" },
+          { base64: afterImageBase64, mimeType },
+          { title: issue.title, category: issue.category }
+        );
+        if (v)
+          await updateDoc(doc(db, COLL, id), {
+            fixVerified: v.verified,
+            fixNote: v.note,
+            fixConfidence: v.confidence,
+          });
+      }
+    } catch {
+      /* verification is best-effort */
+    }
     await notifyWatchers(issue, "resolved");
-    return issue;
+    return getIssue(id);
   },
 
   async reopenIssue(id: string, reason?: string): Promise<Issue> {

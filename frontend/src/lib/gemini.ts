@@ -167,3 +167,53 @@ Issue: ${JSON.stringify({
     return fallback;
   }
 }
+
+export interface FixVerification {
+  verified: boolean;
+  confidence: number;
+  note: string;
+}
+
+// Compare the citizen's BEFORE photo with the authority's AFTER photo.
+// Returns null if Gemini is unavailable (verification is best-effort).
+export async function verifyFix(
+  before: { base64: string; mimeType: string },
+  after: { base64: string; mimeType: string },
+  context: { title: string; category: string }
+): Promise<FixVerification | null> {
+  const client = getAI();
+  if (!client) return null;
+  try {
+    const res = await client.models.generateContent({
+      model: MODEL,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `Two photos of a reported "${context.category}" civic issue ("${context.title}"). The FIRST image is BEFORE; the SECOND is the AFTER a claimed fix. Decide: (a) are they plausibly the same place/object, and (b) does the AFTER show the issue genuinely resolved? Return ONLY JSON: {"verified": boolean, "confidence": number between 0 and 1, "note": one short sentence}.`,
+            },
+            { inlineData: { mimeType: before.mimeType, data: before.base64 } },
+            { inlineData: { mimeType: after.mimeType, data: after.base64 } },
+          ],
+        },
+      ],
+      config: { responseMimeType: "application/json", temperature: 0.1 },
+    });
+    const cleaned = (res.text || "")
+      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+    const p = JSON.parse(cleaned);
+    return {
+      verified: !!p.verified,
+      confidence: Number(p.confidence) || 0,
+      note: String(p.note || ""),
+    };
+  } catch (err) {
+    console.warn("[gemini] verifyFix failed —", err);
+    return null;
+  }
+}
