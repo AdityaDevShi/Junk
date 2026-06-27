@@ -101,6 +101,34 @@ async function corroborate(id: string, reporterId?: string): Promise<Issue> {
   return getIssue(id);
 }
 
+export interface AppNotification {
+  id: string;
+  userId: string;
+  issueId: string;
+  title: string;
+  status: string;
+  read: boolean;
+  createdAt?: { seconds: number };
+}
+
+async function notifyWatchers(issue: Issue, status: string) {
+  const watchers = Array.from(
+    new Set([issue.reporterId, ...(issue.corroborators || [])].filter(Boolean))
+  );
+  await Promise.all(
+    watchers.map((uid) =>
+      addDoc(collection(db, "notifications"), {
+        userId: uid,
+        issueId: issue.id,
+        title: issue.title,
+        status,
+        read: false,
+        createdAt: serverTimestamp(),
+      })
+    )
+  );
+}
+
 export const api = {
   // Real-time listener — the map/feed update live for everyone.
   subscribeIssues(cb: (issues: Issue[]) => void, onErr?: (e: Error) => void) {
@@ -178,7 +206,9 @@ export const api = {
       updatedAt: serverTimestamp(),
       ...(by ? { lastActionBy: by } : {}),
     });
-    return getIssue(id);
+    const issue = await getIssue(id);
+    await notifyWatchers(issue, status);
+    return issue;
   },
 
   async resolveIssue(
@@ -194,7 +224,9 @@ export const api = {
       resolvedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-    return getIssue(id);
+    const issue = await getIssue(id);
+    await notifyWatchers(issue, "resolved");
+    return issue;
   },
 
   async reopenIssue(id: string, reason?: string): Promise<Issue> {
@@ -203,7 +235,9 @@ export const api = {
       reopenReason: reason ?? null,
       updatedAt: serverTimestamp(),
     });
-    return getIssue(id);
+    const issue = await getIssue(id);
+    await notifyWatchers(issue, "reopened");
+    return issue;
   },
 
   // "I see this too" — adds a corroboration and escalates priority, unless the
@@ -218,6 +252,24 @@ export const api = {
     if (already) return { issue, already: true };
     const updated = await corroborate(id, reporterId);
     return { issue: updated, already: false };
+  },
+
+  subscribeNotifications(uid: string, cb: (items: AppNotification[]) => void) {
+    return onSnapshot(
+      query(collection(db, "notifications"), where("userId", "==", uid)),
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as object) })) as AppNotification[];
+        list.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+        cb(list.slice(0, 20));
+      },
+      () => {}
+    );
+  },
+  async markNotificationRead(id: string) {
+    await updateDoc(doc(db, "notifications", id), { read: true });
+  },
+  async markAllRead(ids: string[]) {
+    await Promise.all(ids.map((id) => updateDoc(doc(db, "notifications", id), { read: true })));
   },
 
   async draftComplaint(id: string): Promise<{ complaintDraft: string; issue: Issue }> {

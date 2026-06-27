@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./lib/auth";
+import { NotificationBell } from "./components/NotificationBell";
 
 export default function App() {
   const loc = useLocation();
@@ -35,6 +36,7 @@ export default function App() {
           <Link to="/report" className="btn btn-primary btn-sm">
             ＋ Report
           </Link>
+          <NotificationBell />
           {user ? (
             <Link to="/profile" className="user-chip">
               {displayName}
