@@ -1,4 +1,4 @@
-import type { Severity, IssueStatus } from "../types";
+import type { Severity, IssueStatus, Issue } from "../types";
 
 const sevLabel: Record<Severity, string> = {
   low: "Low",
@@ -39,4 +39,38 @@ const catLabel: Record<string, string> = {
 
 export function categoryLabel(category: string): string {
   return catLabel[category] ?? category;
+}
+
+// Image trust signal: live in-app captures are verified; AI flags suspicious
+// (AI-generated / screenshot / reused / edited) images.
+export function AuthenticityBadge({
+  issue,
+}: {
+  issue: Pick<Issue, "capturedLive" | "authenticity" | "authenticityNote">;
+}) {
+  if (issue.capturedLive) {
+    return (
+      <span className="trust-badge live" title="Captured live with the in-app camera">
+        🛡️ Live capture
+      </span>
+    );
+  }
+  if (issue.authenticity === "suspicious") {
+    return (
+      <span
+        className="trust-badge suspect"
+        title={issue.authenticityNote || "Image may be AI-generated, a screenshot, or reused"}
+      >
+        ⚠️ Unverified image
+      </span>
+    );
+  }
+  if (issue.authenticity === "genuine") {
+    return (
+      <span className="trust-badge ok" title="AI found no signs of tampering or reuse">
+        ✓ AI-checked
+      </span>
+    );
+  }
+  return null;
 }

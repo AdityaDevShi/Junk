@@ -45,7 +45,7 @@ export async function classifyViaGroq({
         type: "text",
         text: `You are a civic-issue triage assistant for an Indian municipal app. Analyze the photo${
           note ? ` (citizen note: "${note}")` : ""
-        }. Return JSON: {"title": string (<=8 words), "description": string (1-2 sentences), "category": one of ["pothole","garbage","streetlight","water_leakage","drainage","sewage","road_damage","tree_fallen","stray_animals","public_toilet","other"], "severity": one of ["low","medium","high","critical"], "isCivicIssue": boolean (FALSE if it is not a genuine public/civic problem — e.g. a selfie, a person, food, or a random indoor object), "confidence": number 0-1}.`,
+        }. Return JSON: {"title": string (<=8 words), "description": string (1-2 sentences), "category": one of ["pothole","garbage","streetlight","water_leakage","drainage","sewage","road_damage","tree_fallen","stray_animals","public_toilet","other"], "severity": one of ["low","medium","high","critical"], "isCivicIssue": boolean (FALSE if it is not a genuine public/civic problem — e.g. a selfie, a person, food, or a random indoor object), "confidence": number 0-1, "authenticity": one of ["genuine","suspicious"] (suspicious if AI-generated/rendered, a screenshot/photo-of-a-screen, stock/online imagery, or obviously edited), "authenticityNote": string (<=12 words)}.`,
       },
       { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
     ]);
@@ -58,6 +58,8 @@ export async function classifyViaGroq({
         : "medium") as Severity,
       isCivicIssue: p.isCivicIssue !== false,
       confidence: Number(p.confidence) || 0,
+      authenticity: p.authenticity === "suspicious" ? "suspicious" : "genuine",
+      authenticityNote: String(p.authenticityNote || ""),
     };
   } catch (e) {
     console.warn("[groq] classify failed —", e);

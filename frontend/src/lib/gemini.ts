@@ -26,6 +26,8 @@ export interface Classification {
   severity: Severity;
   isCivicIssue?: boolean;
   confidence?: number;
+  authenticity?: "genuine" | "suspicious";
+  authenticityNote?: string;
 }
 
 let ai: GoogleGenAI | null = null;
@@ -85,6 +87,8 @@ function stubClassification(note = ""): Classification {
     severity,
     isCivicIssue: true,
     confidence: 0,
+    authenticity: "genuine",
+    authenticityNote: "",
   };
 }
 
@@ -100,10 +104,13 @@ Return ONLY a JSON object with this exact shape:
   "category": one of ${JSON.stringify(CATEGORIES)},
   "severity": one of ["low","medium","high","critical"],
   "isCivicIssue": boolean,
-  "confidence": number between 0 and 1
+  "confidence": number between 0 and 1,
+  "authenticity": one of ["genuine","suspicious"],
+  "authenticityNote": string (<= 12 words, why)
 }
 
-Severity: "critical" = immediate hazard (open manhole, live wire, sinkhole, gas/sewage leak). "high" = significant risk. "medium" = standard. "low" = minor.`;
+Severity: "critical" = immediate hazard (open manhole, live wire, sinkhole, gas/sewage leak). "high" = significant risk. "medium" = standard. "low" = minor.
+Authenticity: mark "suspicious" if the image looks AI-generated/rendered, is a screenshot or photo-of-a-screen, looks like stock/online imagery, or shows obvious editing — otherwise "genuine".`;
 }
 
 export async function classifyIssue({

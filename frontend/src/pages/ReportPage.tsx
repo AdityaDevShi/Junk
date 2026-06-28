@@ -6,7 +6,7 @@ import { extractVideoFrame, inlineVideoIfSmall } from "../lib/video";
 import { getLocation } from "../lib/geo";
 import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
-import { SeverityBadge, categoryLabel } from "../components/badges";
+import { SeverityBadge, categoryLabel, AuthenticityBadge } from "../components/badges";
 import { Loader } from "../components/Loader";
 import { CameraCapture } from "../components/CameraCapture";
 import { VoiceButton } from "../components/VoiceButton";
@@ -32,6 +32,7 @@ export default function ReportPage() {
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const [videoUrl, setVideoUrl] = useState<string | null>(null); // object URL for playback
   const [videoData, setVideoData] = useState<string | null>(null); // inline clip for storage
+  const [capturedLive, setCapturedLive] = useState(false); // live in-app camera = higher trust
 
   // Celebrate a successful report.
   useEffect(() => {
@@ -88,7 +89,10 @@ export default function ReportPage() {
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) void handleMediaFile(file);
+    if (file) {
+      setCapturedLive(false); // uploaded from device — can't vouch it's live
+      void handleMediaFile(file);
+    }
   }
 
   function resetForm() {
@@ -128,6 +132,7 @@ export default function ReportPage() {
         reporterName,
         mediaType,
         videoData,
+        capturedLive,
       });
       setResult(issue);
       setPhase("done");
@@ -201,6 +206,7 @@ export default function ReportPage() {
           <div className="row gap wrap">
             <span className="badge cat">{categoryLabel(result.category)}</span>
             <SeverityBadge severity={result.severity} />
+            <AuthenticityBadge issue={result} />
             {result.reportCount > 1 && (
               <span className="report-count">{result.reportCount} reports</span>
             )}
@@ -336,6 +342,7 @@ export default function ReportPage() {
         <CameraCapture
           onCapture={(f) => {
             setShowCamera(false);
+            setCapturedLive(true); // taken with the in-app live camera
             void handleMediaFile(f);
           }}
           onClose={() => setShowCamera(false)}

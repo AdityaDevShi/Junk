@@ -26,6 +26,9 @@ export interface Issue {
   afterImageData: string | null;
   mediaType?: "image" | "video";
   videoData?: string | null;
+  authenticity?: "genuine" | "suspicious";
+  authenticityNote?: string;
+  capturedLive?: boolean;
   reporterId: string;
   reporterName: string;
   reportCount: number;

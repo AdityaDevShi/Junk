@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../lib/api";
 import type { Issue } from "../types";
-import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
+import { SeverityBadge, StatusPill, categoryLabel, AuthenticityBadge } from "../components/badges";
 import { compressImage } from "../lib/image";
 import { getLocation } from "../lib/geo";
 import { Loader } from "../components/Loader";
@@ -204,6 +204,7 @@ export default function GovPanelPage() {
                 <span className="badge cat">{categoryLabel(issue.category)}</span>
                 <SeverityBadge severity={issue.severity} />
                 <StatusPill status={issue.status} />
+                <AuthenticityBadge issue={issue} />
               </div>
               <strong>{issue.title}</strong>
               {issue.location?.address && (

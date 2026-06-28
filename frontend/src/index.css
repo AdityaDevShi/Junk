@@ -599,6 +599,35 @@ p {
   letter-spacing: 0.02em;
 }
 
+/* Image trust badge */
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  cursor: help;
+}
+.trust-badge.live {
+  background: #e7f1ea;
+  color: #2f6b46;
+  border-color: #b7d8c4;
+}
+.trust-badge.ok {
+  background: #eef2e8;
+  color: #5a6b3f;
+  border-color: #d4ddc2;
+}
+.trust-badge.suspect {
+  background: #fbe9e6;
+  color: #a63326;
+  border-color: #efc3bb;
+}
+
 /* Predictive insights */
 .insights {
   margin: 1rem 0;

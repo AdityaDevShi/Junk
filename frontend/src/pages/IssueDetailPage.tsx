@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../lib/api";
 import type { Issue } from "../types";
-import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
+import { SeverityBadge, StatusPill, categoryLabel, AuthenticityBadge } from "../components/badges";
 import { Loader } from "../components/Loader";
 import { useAuth } from "../lib/auth";
 
@@ -104,6 +104,7 @@ export default function IssueDetailPage() {
         <span className="badge cat">{categoryLabel(issue.category)}</span>
         <SeverityBadge severity={issue.severity} />
         <StatusPill status={issue.status} />
+        <AuthenticityBadge issue={issue} />
       </div>
 
       <h1>{issue.title}</h1>

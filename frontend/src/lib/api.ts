@@ -156,6 +156,7 @@ export interface ReportInput {
   reporterName?: string;
   mediaType?: "image" | "video";
   videoData?: string | null; // inline clip data URL, stored only if it fits Firestore
+  capturedLive?: boolean; // true when taken with the in-app live camera (higher trust)
 }
 
 // Firestore docs cap at ~1 MB; keep the inline clip well under that.
@@ -294,6 +295,12 @@ export const api = {
       mediaType: input.mediaType ?? "image",
       videoData:
         input.videoData && input.videoData.length <= MAX_INLINE_VIDEO ? input.videoData : null,
+      capturedLive: input.capturedLive ?? false,
+      // Live in-app captures can't be AI-generated/reused, so they're trusted.
+      authenticity: input.capturedLive ? "genuine" : classified.authenticity ?? "genuine",
+      authenticityNote: input.capturedLive
+        ? "Captured live in-app"
+        : classified.authenticityNote ?? "",
       reporterId: input.reporterId ?? "anonymous",
       reporterName: input.reporterName ?? "Anonymous",
       corroborators: [] as string[],
