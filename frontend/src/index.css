@@ -689,6 +689,48 @@ p {
   font-weight: 500;
   opacity: 0.85;
 }
+
+/* ---- Authority stat cards (restored) ---- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.3rem;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.stat-num {
+  display: block;
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.stat-num.warn {
+  color: var(--sev-high);
+}
+.stat-num.ok {
+  color: var(--sev-low);
+}
+.stat-label {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.ai-verdict {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.ai-verdict.ok {
+  color: var(--sev-low);
+}
+.ai-verdict.warn {
+  color: var(--sev-critical);
+}
 .voice-btn {
   margin-top: 0.5rem;
 }

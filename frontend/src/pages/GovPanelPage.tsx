@@ -197,6 +197,14 @@ export default function GovPanelPage() {
               {issue.location?.address && (
                 <span className="muted small">📍 {issue.location.address}</span>
               )}
+              {issue.status === "resolved" &&
+                issue.fixVerified !== undefined &&
+                issue.fixVerified !== null && (
+                  <span className={`ai-verdict ${issue.fixVerified ? "ok" : "warn"}`}>
+                    🤖 {issue.fixVerified ? "AI: fix verified" : "AI: needs review"}
+                    {issue.fixNote ? ` — ${issue.fixNote}` : ""}
+                  </span>
+                )}
             </div>
             <div className="gov-actions">
               {issue.status === "resolved" ? (
