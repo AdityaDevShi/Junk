@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Severity } from "../types";
+import { classifyViaGroq, verifyFixViaGroq } from "./groq";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 const MODEL = (import.meta.env.VITE_GEMINI_MODEL as string) || "gemini-2.0-flash";
@@ -115,7 +116,8 @@ export async function classifyIssue({
   note?: string;
 }): Promise<Classification> {
   const client = getAI();
-  if (!client) return stubClassification(note);
+  if (!client)
+    return (await classifyViaGroq({ imageBase64, mimeType, note })) ?? stubClassification(note);
   try {
     const res = await client.models.generateContent({
       model: MODEL,
@@ -131,8 +133,8 @@ export async function classifyIssue({
     if (!parsed) throw new Error("Gemini returned no parseable JSON");
     return parsed;
   } catch (err) {
-    console.warn("[gemini] classify failed, using fallback —", err);
-    return stubClassification(note);
+    console.warn("[gemini] classify failed, trying Groq —", err);
+    return (await classifyViaGroq({ imageBase64, mimeType, note })) ?? stubClassification(note);
   }
 }
 
@@ -182,7 +184,7 @@ export async function verifyFix(
   context: { title: string; category: string }
 ): Promise<FixVerification | null> {
   const client = getAI();
-  if (!client) return null;
+  if (!client) return verifyFixViaGroq(before, after, context);
   try {
     const res = await client.models.generateContent({
       model: MODEL,
@@ -213,7 +215,7 @@ export async function verifyFix(
       note: String(p.note || ""),
     };
   } catch (err) {
-    console.warn("[gemini] verifyFix failed —", err);
-    return null;
+    console.warn("[gemini] verifyFix failed, trying Groq —", err);
+    return verifyFixViaGroq(before, after, context);
   }
 }
