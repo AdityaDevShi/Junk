@@ -29,6 +29,7 @@ export default function GovPanelPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [cityInput, setCityInput] = useState("");
   const [detecting, setDetecting] = useState(false);
   const [detectError, setDetectError] = useState<string | null>(null);
@@ -86,9 +87,15 @@ export default function GovPanelPage() {
     e.target.value = "";
     if (!file || !id) return;
     setBusyId(id);
+    setNotice(null);
     try {
       const c = await compressImage(file);
-      await api.resolveIssue(id, c.base64, "image/jpeg", authorityName);
+      const res = await api.resolveIssue(id, c.base64, "image/jpeg", authorityName);
+      if (res.rejected) {
+        setNotice(
+          `❌ Fix not accepted — ${res.note || "the photo doesn't match the reported issue"}. The issue stays open; upload a photo of the actual fixed location.`
+        );
+      }
     } finally {
       setBusyId(null);
       setResolvingId(null);
@@ -176,6 +183,8 @@ export default function GovPanelPage() {
         onChange={onAfterPhoto}
       />
 
+      {notice && <div className="error-box">{notice}</div>}
+
       {loading && <Loader label="Loading reports…" />}
       {!loading && scoped.length === 0 && (
         <div className="empty">
@@ -234,7 +243,7 @@ export default function GovPanelPage() {
                     disabled={busyId === issue.id}
                     onClick={() => startResolve(issue.id)}
                   >
-                    {busyId === issue.id ? "…" : "✓ Resolve with photo"}
+                    {busyId === issue.id ? "Verifying…" : "✓ Resolve with photo"}
                   </button>
                 </>
               )}

@@ -217,41 +217,54 @@ export const api = {
     return issue;
   },
 
+  // AI-gated resolution: the fix photo must pass before/after verification.
+  // If the AI is unavailable, resolution is allowed (an outage can't block work).
   async resolveIssue(
     id: string,
     afterImageBase64: string,
     mimeType: string,
     resolvedBy?: string
-  ): Promise<Issue> {
+  ): Promise<{ issue: Issue; rejected: boolean; note?: string }> {
+    const before = await getIssue(id);
+    const beforeB64 = (before.imageData || "").split(",")[1];
+
+    let verdict: Awaited<ReturnType<typeof verifyFix>> = null;
+    if (beforeB64 && afterImageBase64) {
+      try {
+        verdict = await verifyFix(
+          { base64: beforeB64, mimeType: "image/jpeg" },
+          { base64: afterImageBase64, mimeType },
+          { title: before.title, category: before.category }
+        );
+      } catch {
+        verdict = null;
+      }
+    }
+
+    // AI explicitly rejects the fix -> do NOT resolve; keep it open.
+    if (verdict && verdict.verified === false) {
+      await updateDoc(doc(db, COLL, id), {
+        fixVerified: false,
+        fixNote: verdict.note,
+        updatedAt: serverTimestamp(),
+      });
+      return { issue: await getIssue(id), rejected: true, note: verdict.note };
+    }
+
+    // Verified, or AI unavailable -> accept the resolution.
     await updateDoc(doc(db, COLL, id), {
       status: "resolved",
       afterImageData: afterImageBase64 ? `data:${mimeType};base64,${afterImageBase64}` : null,
       resolvedBy: resolvedBy ?? "authority",
       resolvedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      fixVerified: verdict ? verdict.verified : null,
+      fixNote: verdict ? verdict.note : null,
+      fixConfidence: verdict ? verdict.confidence : null,
     });
     const issue = await getIssue(id);
-    // Best-effort AI before/after verification.
-    try {
-      const beforeB64 = (issue.imageData || "").split(",")[1];
-      if (beforeB64 && afterImageBase64) {
-        const v = await verifyFix(
-          { base64: beforeB64, mimeType: "image/jpeg" },
-          { base64: afterImageBase64, mimeType },
-          { title: issue.title, category: issue.category }
-        );
-        if (v)
-          await updateDoc(doc(db, COLL, id), {
-            fixVerified: v.verified,
-            fixNote: v.note,
-            fixConfidence: v.confidence,
-          });
-      }
-    } catch {
-      /* verification is best-effort */
-    }
     await notifyWatchers(issue, "resolved");
-    return getIssue(id);
+    return { issue, rejected: false };
   },
 
   async reopenIssue(id: string, reason?: string): Promise<Issue> {
