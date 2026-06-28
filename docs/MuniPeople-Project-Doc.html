@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MuniPeople — Project Document</title>
+<style>
+  :root{
+    --cream:#FBF7F0; --paper:#FFFFFF; --sand:#EFE6D6; --sand-2:#E3D6BF;
+    --ink:#2B2420; --ink-soft:#5A4F45; --muted:#8A7E70;
+    --clay:#C2613D; --clay-dark:#A04E30; --gold:#D9A441; --sage:#7C8C6B;
+    --sky:#4F7CAC; --line:#E5DAC7;
+    --crit:#B23A2E; --high:#D9772E; --med:#D9A441; --low:#7C8C6B; --ok:#5E8C61;
+    --shadow:0 2px 8px rgba(43,36,32,.08), 0 12px 30px rgba(43,36,32,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 28px 80px;}
+  h1,h2,h3{font-family:Georgia,"Times New Roman",serif;letter-spacing:-.01em;color:var(--ink);}
+  h2{font-size:1.7rem;margin:54px 0 8px;padding-bottom:10px;border-bottom:2px solid var(--line);}
+  h3{font-size:1.2rem;margin:28px 0 6px;color:var(--clay-dark);}
+  p{margin:10px 0;color:var(--ink-soft);}
+  a{color:var(--clay-dark);}
+  code{background:var(--sand);padding:1px 6px;border-radius:5px;font-size:.86em;color:var(--clay-dark);
+    font-family:"SF Mono",Consolas,Menlo,monospace;}
+  ul{margin:10px 0;padding-left:22px;color:var(--ink-soft);}
+  li{margin:5px 0;}
+  .eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:.72rem;font-weight:700;color:var(--clay);}
+
+  /* Cover */
+  .cover{background:linear-gradient(160deg,#2B2420 0%,#3E342B 55%,#5A4332 100%);
+    color:#F6EEE2;border-radius:0 0 28px 28px;padding:64px 48px 56px;text-align:center;position:relative;overflow:hidden;}
+  .cover:before{content:"";position:absolute;inset:0;background:
+    radial-gradient(600px 300px at 80% -10%, rgba(217,164,65,.22), transparent 60%),
+    radial-gradient(500px 260px at 10% 120%, rgba(194,97,61,.25), transparent 60%);}
+  .cover *{position:relative;}
+  .logo-pin{width:74px;height:74px;margin:0 auto 18px;display:block;}
+  .cover h1{color:#FBF3E6;font-size:3.1rem;margin:0;}
+  .cover .tag{font-size:1.15rem;color:#E8D9C0;margin:10px 0 22px;font-family:Georgia,serif;font-style:italic;}
+  .cover .pillrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+  .cover .pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);
+    padding:7px 14px;border-radius:999px;font-size:.82rem;color:#F2E7D5;}
+  .cover .url{display:inline-block;margin-top:24px;background:var(--gold);color:#2B2420;font-weight:700;
+    padding:11px 22px;border-radius:999px;text-decoration:none;box-shadow:0 8px 20px rgba(217,164,65,.35);}
+
+  .lead{font-size:1.12rem;color:var(--ink);background:var(--paper);border:1px solid var(--line);
+    border-left:5px solid var(--clay);border-radius:14px;padding:20px 24px;margin:28px 0;box-shadow:var(--shadow);}
+
+  /* Stat cards */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0;}
+  .scard{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 16px;
+    text-align:center;box-shadow:var(--shadow);}
+  .scard .n{font-family:Georgia,serif;font-size:2.1rem;font-weight:700;color:var(--clay-dark);line-height:1;}
+  .scard .l{font-size:.78rem;color:var(--muted);margin-top:7px;text-transform:uppercase;letter-spacing:.06em;}
+  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr);}}
+
+  /* Feature grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0;}
+  @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+  .fcard{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);}
+  .fcard h3{margin:0 0 4px;font-family:-apple-system,sans-serif;font-size:1.02rem;color:var(--ink);display:flex;align-items:center;gap:9px;}
+  .fcard .ico{width:30px;height:30px;flex:0 0 30px;border-radius:9px;background:var(--sand);
+    display:grid;place-items:center;font-size:1rem;}
+  .fcard p{margin:6px 0 0;font-size:.92rem;}
+
+  /* Figure / diagram */
+  figure{margin:26px 0;background:var(--paper);border:1px solid var(--line);border-radius:18px;
+    padding:22px;box-shadow:var(--shadow);}
+  figure svg{width:100%;height:auto;display:block;}
+  figcaption{text-align:center;color:var(--muted);font-size:.85rem;margin-top:12px;font-style:italic;}
+
+  /* Tech chips */
+  .chips{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0;}
+  .chip{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:8px 15px;
+    font-size:.86rem;color:var(--ink-soft);display:inline-flex;gap:8px;align-items:center;}
+  .chip.g{border-color:var(--gold);background:linear-gradient(180deg,#FFFDF7,#FBF2DC);color:var(--ink);font-weight:600;}
+  .dot{width:9px;height:9px;border-radius:50%;}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse;margin:16px 0;background:var(--paper);
+    border-radius:14px;overflow:hidden;box-shadow:var(--shadow);font-size:.92rem;}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);}
+  th{background:var(--sand);color:var(--ink);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;}
+  tr:last-child td{border-bottom:none;}
+  td code{font-size:.82em;}
+
+  /* Compliance */
+  .comply{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:6px 0;box-shadow:var(--shadow);margin:16px 0;}
+  .crow{display:flex;gap:14px;padding:15px 20px;border-bottom:1px solid var(--line);align-items:flex-start;}
+  .crow:last-child{border-bottom:none;}
+  .check{flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:var(--ok);color:#fff;
+    display:grid;place-items:center;font-weight:800;font-size:.9rem;margin-top:2px;}
+  .crow b{color:var(--ink);}
+  .callout{background:linear-gradient(180deg,#FFFDF7,#FBF2DC);border:1px solid var(--gold);
+    border-radius:14px;padding:16px 20px;margin:18px 0;}
+  .callout b{color:var(--clay-dark);}
+
+  footer{margin-top:60px;text-align:center;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line);padding-top:24px;}
+
+  @media print{
+    body{background:#fff;}
+    .cover{border-radius:0;}
+    figure,.scard,.fcard,table,.comply,.lead{box-shadow:none;}
+    h2{break-after:avoid;} figure{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<header class="cover">
+  <svg class="logo-pin" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32 4C20 4 11 13 11 25c0 14 21 35 21 35s21-21 21-35C53 13 44 4 32 4z" fill="#D9A441"/>
+    <circle cx="32" cy="25" r="9" fill="#2B2420"/>
+    <path d="M27 25l3.5 3.5L38 21" stroke="#D9A441" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="eyebrow" style="color:#E8C98A">VIBE2SHIP · Coding Ninjas × Google for Developers</div>
+  <h1>MuniPeople</h1>
+  <div class="tag">AI-powered hyperlocal civic-issue reporting — see it, snap it, solve it.</div>
+  <div class="pillrow">
+    <span class="pill">🏆 Problem: Community Hero — Hyperlocal Problem Solver</span>
+    <span class="pill">🤖 Google Gemini + Firebase</span>
+    <span class="pill">📅 Submission: June 29, 2026</span>
+  </div>
+  <a class="url" href="https://junkcivicsense.web.app">🔗 Live: junkcivicsense.web.app</a>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ EXEC SUMMARY ============ -->
+  <p class="lead">
+    <b>MuniPeople</b> turns every citizen into a civic hero. Snap a photo of a pothole, garbage pile,
+    broken streetlight or water leak — and an <b>AI agent (Google Gemini)</b> instantly understands the
+    image, classifies the problem, judges its severity, merges duplicate reports from neighbours, drafts a
+    formal complaint, and tracks it on a live map until the local authority fixes it. Authorities get a
+    jurisdiction-scoped dashboard where the <b>AI verifies the actual fix</b> by comparing before/after
+    photos — so "resolved" means genuinely resolved, not a rubber stamp.
+  </p>
+
+  <h2>📊 At a Glance</h2>
+  <div class="stats">
+    <div class="scard"><div class="n">11</div><div class="l">Issue categories</div></div>
+    <div class="scard"><div class="n">3-layer</div><div class="l">AI fallback chain</div></div>
+    <div class="scard"><div class="n">60 m</div><div class="l">Smart dedup radius</div></div>
+    <div class="scard"><div class="n">Real-time</div><div class="l">Live map sync</div></div>
+  </div>
+  <div class="stats">
+    <div class="scard"><div class="n">4</div><div class="l">Severity tiers</div></div>
+    <div class="scard"><div class="n">5</div><div class="l">Lifecycle states</div></div>
+    <div class="scard"><div class="n">100%</div><div class="l">Google AI Studio (Gemini)</div></div>
+    <div class="scard"><div class="n">PWA</div><div class="l">Installable, mobile-first</div></div>
+  </div>
+
+  <!-- ============ PROBLEM ============ -->
+  <h2>🎯 The Problem</h2>
+  <p>
+    Reporting a civic issue in India today is broken: complaints get lost across siloed portals and phone
+    lines, the same pothole gets reported fifty times with no way to merge them, authorities can't tell what's
+    urgent from what's trivial, and citizens never find out whether anything actually happened. The feedback
+    loop between <b>the person who sees the problem</b> and <b>the office that can fix it</b> is missing.
+  </p>
+  <p>
+    The hackathon brief — <i>"Community Hero — Hyperlocal Problem Solver"</i> — asks for a platform that lets
+    ordinary people surface neighbourhood problems and get them solved. MuniPeople answers that with an
+    <b>AI agent sitting in the middle of the loop</b>, doing the triage, deduplication, drafting and
+    verification work that no human has time to do at city scale.
+  </p>
+
+  <!-- ============ SOLUTION / FEATURES ============ -->
+  <h2>✨ What MuniPeople Does</h2>
+  <div class="grid">
+    <div class="fcard"><h3><span class="ico">📸</span> AI photo triage</h3>
+      <p>Gemini reads the photo, writes a title + description, picks one of 11 categories, and rates severity from low to critical. A selfie or non-issue is rejected at the gate.</p></div>
+    <div class="fcard"><h3><span class="ico">🧠</span> Smart deduplication</h3>
+      <p>A new report within 60 m of an existing open issue of the same category is merged as a "corroboration" instead of a duplicate — crowd weight escalates priority automatically.</p></div>
+    <div class="fcard"><h3><span class="ico">🗺️</span> Live severity map</h3>
+      <p>Every report appears in real time on an OpenStreetMap-based map, colour-coded by severity, so the whole community (and the authority) sees hotspots as they form.</p></div>
+    <div class="fcard"><h3><span class="ico">✍️</span> Auto-drafted complaints</h3>
+      <p>One tap turns an issue into a polite, formal complaint letter to the municipal authority — written by Gemini, addressed and worded correctly.</p></div>
+    <div class="fcard"><h3><span class="ico">✅</span> AI-gated resolution</h3>
+      <p>An authority can't just mark something done. They upload an "after" photo; Gemini compares it to the original and only allows "resolved" if the fix genuinely matches.</p></div>
+    <div class="fcard"><h3><span class="ico">🏛️</span> Authority dashboard</h3>
+      <p>Pre-authorised officials get a dashboard scoped to <b>their own city only</b> — Mumbai never sees Karnataka's reports — sorted by severity, with acknowledge / start-work / resolve actions.</p></div>
+    <div class="fcard"><h3><span class="ico">🔔</span> Status notifications</h3>
+      <p>Reporters and everyone who corroborated an issue get notified at each stage — acknowledged, in progress, resolved, reopened.</p></div>
+    <div class="fcard"><h3><span class="ico">🎙️</span> Voice + camera + GPS</h3>
+      <p>Web Speech API for voice notes, live camera capture, and one-tap geolocation with address search — full hyperlocal context attached to every report.</p></div>
+  </div>
+
+  <!-- ============ FLOW 1: CITIZEN ============ -->
+  <h2>🔄 How It Works — Citizen Report Flow</h2>
+  <figure>
+    <svg viewBox="0 0 860 470" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+      <defs>
+        <marker id="ar" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#8A7E70"/>
+        </marker>
+        <style>
+          .box{fill:#FFFFFF;stroke:#E5DAC7;stroke-width:1.5;rx:14;}
+          .lbl{font-size:14px;fill:#2B2420;font-weight:600;}
+          .sub{font-size:11px;fill:#8A7E70;}
+          .ln{stroke:#8A7E70;stroke-width:1.6;fill:none;marker-end:url(#ar);}
+          .step{font-size:11px;fill:#fff;font-weight:700;}
+        </style>
+      </defs>
+
+      <!-- nodes -->
+      <g>
+        <rect class="box" x="30" y="30" width="190" height="58" rx="14" fill="#FBF2DC" stroke="#D9A441"/>
+        <text class="lbl" x="125" y="55" text-anchor="middle">📸 Capture photo</text>
+        <text class="sub" x="125" y="73" text-anchor="middle">camera or upload</text>
+      </g>
+      <g>
+        <rect class="box" x="335" y="30" width="190" height="58" rx="14"/>
+        <text class="lbl" x="430" y="55" text-anchor="middle">📝 Note + 📍 location</text>
+        <text class="sub" x="430" y="73" text-anchor="middle">voice / text · GPS required</text>
+      </g>
+      <g>
+        <rect class="box" x="640" y="30" width="190" height="58" rx="14" fill="#FBF2DC" stroke="#D9A441"/>
+        <text class="lbl" x="735" y="50" text-anchor="middle">🤖 Gemini triage</text>
+        <text class="sub" x="735" y="68" text-anchor="middle">title · category · severity</text>
+      </g>
+
+      <!-- decision: civic? -->
+      <g>
+        <polygon points="735,150 835,200 735,250 635,200" fill="#fff" stroke="#C2613D" stroke-width="1.6"/>
+        <text class="lbl" x="735" y="196" text-anchor="middle">Is it a real</text>
+        <text class="lbl" x="735" y="212" text-anchor="middle">civic issue?</text>
+      </g>
+      <g>
+        <rect class="box" x="640" y="300" width="190" height="52" rx="14" fill="#FBE9E6" stroke="#B23A2E"/>
+        <text class="lbl" x="735" y="331" text-anchor="middle">❌ Rejected at gate</text>
+      </g>
+
+      <!-- decision: duplicate? -->
+      <g>
+        <polygon points="430,150 535,200 430,250 325,200" fill="#fff" stroke="#C2613D" stroke-width="1.6"/>
+        <text class="lbl" x="430" y="196" text-anchor="middle">Open issue</text>
+        <text class="lbl" x="430" y="212" text-anchor="middle">within 60 m?</text>
+      </g>
+      <g>
+        <rect class="box" x="335" y="300" width="190" height="58" rx="14" fill="#EEF2E8" stroke="#7C8C6B"/>
+        <text class="lbl" x="430" y="325" text-anchor="middle">🤝 Corroborate</text>
+        <text class="sub" x="430" y="343" text-anchor="middle">+1 weight · escalate priority</text>
+      </g>
+
+      <!-- create -->
+      <g>
+        <rect class="box" x="30" y="300" width="190" height="58" rx="14" fill="#EEF2E8" stroke="#7C8C6B"/>
+        <text class="lbl" x="125" y="325" text-anchor="middle">🆕 Create issue</text>
+        <text class="sub" x="125" y="343" text-anchor="middle">status: reported</text>
+      </g>
+      <g>
+        <rect class="box" x="30" y="400" width="495" height="48" rx="14" fill="#FBF2DC" stroke="#D9A441"/>
+        <text class="lbl" x="277" y="429" text-anchor="middle">🗺️ Live on map (real-time)  ·  🔔 watchers notified</text>
+      </g>
+
+      <!-- arrows -->
+      <path class="ln" d="M220,59 L333,59"/>
+      <path class="ln" d="M525,59 L638,59"/>
+      <path class="ln" d="M735,88 L735,148"/>
+      <path class="ln" d="M735,250 L735,298"/>
+      <text class="sub" x="752" y="278">No</text>
+      <path class="ln" d="M635,200 L537,200"/>
+      <text class="sub" x="560" y="192">Yes</text>
+      <path class="ln" d="M430,250 L430,298"/>
+      <text class="sub" x="446" y="278">Yes (dup)</text>
+      <path class="ln" d="M325,200 L222,200 L125,200 L125,298"/>
+      <text class="sub" x="250" y="192">No (new)</text>
+      <path class="ln" d="M125,358 L125,398"/>
+      <path class="ln" d="M430,358 L430,378 L300,378 L300,400"/>
+    </svg>
+    <figcaption>Figure 1 — From snapshot to live, deduplicated, mapped issue in a single AI-driven pipeline.</figcaption>
+  </figure>
+
+  <!-- ============ FLOW 2: AUTHORITY ============ -->
+  <h2>🏛️ Authority Resolution Flow (AI-Gated)</h2>
+  <figure>
+    <svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+      <defs>
+        <marker id="ar2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#8A7E70"/></marker>
+        <style>
+          .b{fill:#FFFFFF;stroke:#E5DAC7;stroke-width:1.5;}
+          .t{font-size:13px;fill:#2B2420;font-weight:600;}
+          .s{font-size:10.5px;fill:#8A7E70;}
+          .l{stroke:#8A7E70;stroke-width:1.6;fill:none;marker-end:url(#ar2);}
+        </style>
+      </defs>
+      <rect class="b" x="20" y="30" width="160" height="56" rx="13" fill="#FBF2DC" stroke="#D9A441"/>
+      <text class="t" x="100" y="54" text-anchor="middle">🏛️ City-scoped</text>
+      <text class="s" x="100" y="71" text-anchor="middle">own jurisdiction only</text>
+
+      <rect class="b" x="215" y="30" width="150" height="56" rx="13"/>
+      <text class="t" x="290" y="54" text-anchor="middle">👀 Acknowledge</text>
+      <text class="s" x="290" y="71" text-anchor="middle">→ start work</text>
+
+      <rect class="b" x="400" y="30" width="160" height="56" rx="13"/>
+      <text class="t" x="480" y="54" text-anchor="middle">📷 Upload AFTER</text>
+      <text class="s" x="480" y="71" text-anchor="middle">photo of the fix</text>
+
+      <rect class="b" x="595" y="30" width="245" height="56" rx="13" fill="#FBF2DC" stroke="#D9A441"/>
+      <text class="t" x="717" y="50" text-anchor="middle">🤖 Gemini before/after verify</text>
+      <text class="s" x="717" y="68" text-anchor="middle">same place? actually fixed?</text>
+
+      <polygon points="717,130 817,175 717,220 617,175" fill="#fff" stroke="#C2613D" stroke-width="1.6"/>
+      <text class="t" x="717" y="172" text-anchor="middle">Match?</text>
+      <text class="t" x="717" y="188" text-anchor="middle" font-size="11">verified?</text>
+
+      <rect class="b" x="380" y="240" width="280" height="46" rx="13" fill="#FBE9E6" stroke="#B23A2E"/>
+      <text class="t" x="520" y="268" text-anchor="middle">❌ Stays OPEN — reason shown to authority</text>
+
+      <rect class="b" x="380" y="147" width="180" height="56" rx="13" fill="#EAF3EA" stroke="#5E8C61"/>
+      <text class="t" x="470" y="171" text-anchor="middle">✅ Resolved</text>
+      <text class="s" x="470" y="189" text-anchor="middle">watchers notified</text>
+
+      <path class="l" d="M180,58 L213,58"/>
+      <path class="l" d="M365,58 L398,58"/>
+      <path class="l" d="M560,58 L593,58"/>
+      <path class="l" d="M717,86 L717,128"/>
+      <path class="l" d="M617,175 L562,175"/>
+      <text class="s" x="575" y="167">Yes</text>
+      <path class="l" d="M717,220 L717,240 L660,240"/>
+      <text class="s" x="690" y="234">No</text>
+    </svg>
+    <figcaption>Figure 2 — "Resolved" is earned: the AI must confirm the fix before the status can change.</figcaption>
+  </figure>
+
+  <!-- ============ AI FALLBACK ============ -->
+  <h2>🤖 AI Reliability — 3-Layer Fallback Chain</h2>
+  <p>
+    The AI never hard-fails the user. Every classification and verification call flows through a graceful
+    cascade: primary Google model first, a free vision model as backup, and a deterministic heuristic as a
+    last resort — so a rate-limit or outage degrades quality, never availability.
+  </p>
+  <figure>
+    <svg viewBox="0 0 860 180" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+      <defs>
+        <marker id="ar3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#8A7E70"/></marker>
+      </defs>
+      <rect x="20" y="60" width="150" height="60" rx="14" fill="#EFE6D6" stroke="#E5DAC7"/>
+      <text x="95" y="95" text-anchor="middle" font-size="13" font-weight="600" fill="#2B2420">📥 AI request</text>
+
+      <rect x="225" y="55" width="180" height="70" rx="14" fill="#FBF2DC" stroke="#D9A441" stroke-width="2"/>
+      <text x="315" y="84" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2B2420">① Gemini 2.0 Flash</text>
+      <text x="315" y="104" text-anchor="middle" font-size="10.5" fill="#8A7E70">Google · multimodal (primary)</text>
+
+      <rect x="455" y="55" width="180" height="70" rx="14" fill="#FFFFFF" stroke="#E5DAC7"/>
+      <text x="545" y="84" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2B2420">② Groq Llama-4</text>
+      <text x="545" y="104" text-anchor="middle" font-size="10.5" fill="#8A7E70">free vision fallback</text>
+
+      <rect x="685" y="55" width="155" height="70" rx="14" fill="#FFFFFF" stroke="#E5DAC7"/>
+      <text x="762" y="84" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2B2420">③ Keyword stub</text>
+      <text x="762" y="104" text-anchor="middle" font-size="10.5" fill="#8A7E70">always works</text>
+
+      <line x1="170" y1="90" x2="222" y2="90" stroke="#8A7E70" stroke-width="1.8" marker-end="url(#ar3)"/>
+      <line x1="405" y1="90" x2="452" y2="90" stroke="#8A7E70" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#ar3)"/>
+      <line x1="635" y1="90" x2="682" y2="90" stroke="#8A7E70" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#ar3)"/>
+      <text x="428" y="48" text-anchor="middle" font-size="10" fill="#B23A2E">on fail / 429</text>
+      <text x="658" y="48" text-anchor="middle" font-size="10" fill="#B23A2E">on fail</text>
+    </svg>
+    <figcaption>Figure 3 — Google Gemini leads; Groq and a heuristic guarantee the app stays up.</figcaption>
+  </figure>
+
+  <!-- ============ ARCHITECTURE ============ -->
+  <h2>🏗️ System Architecture</h2>
+  <figure>
+    <svg viewBox="0 0 860 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+      <defs>
+        <marker id="a4" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8A7E70"/></marker>
+      </defs>
+      <!-- client -->
+      <rect x="30" y="30" width="290" height="300" rx="18" fill="#FBF2DC" stroke="#D9A441" stroke-width="1.6"/>
+      <text x="175" y="58" text-anchor="middle" font-size="14" font-weight="700" fill="#2B2420">CLIENT · React 19 PWA</text>
+      <g font-size="11.5" fill="#5A4F45">
+        <rect x="52" y="75" width="246" height="34" rx="9" fill="#fff" stroke="#E5DAC7"/><text x="64" y="97">📱 Report · Map · Detail · Profile</text>
+        <rect x="52" y="117" width="246" height="34" rx="9" fill="#fff" stroke="#E5DAC7"/><text x="64" y="139">🏛️ Authority dashboard (city-scoped)</text>
+        <rect x="52" y="159" width="246" height="34" rx="9" fill="#fff" stroke="#E5DAC7"/><text x="64" y="181">🎙️ Voice · 📷 Camera · 📍 Geolocation</text>
+        <rect x="52" y="201" width="246" height="34" rx="9" fill="#fff" stroke="#E5DAC7"/><text x="64" y="223">🗺️ Leaflet + OpenStreetMap</text>
+        <rect x="52" y="243" width="246" height="34" rx="9" fill="#fff" stroke="#E5DAC7"/><text x="64" y="265">📊 Impact charts · 🎉 confetti</text>
+        <rect x="52" y="285" width="246" height="30" rx="9" fill="#EFE6D6" stroke="#E5DAC7"/><text x="64" y="305">Installable · offline shell (SW)</text>
+      </g>
+
+      <!-- firebase -->
+      <rect x="565" y="30" width="265" height="180" rx="18" fill="#fff" stroke="#7C8C6B" stroke-width="1.6"/>
+      <text x="697" y="58" text-anchor="middle" font-size="14" font-weight="700" fill="#2B2420">☁️ Firebase (Google)</text>
+      <g font-size="11.5" fill="#5A4F45">
+        <rect x="585" y="74" width="226" height="32" rx="9" fill="#EAF3EA" stroke="#7C8C6B"/><text x="597" y="95">🔥 Firestore — real-time DB</text>
+        <rect x="585" y="113" width="226" height="32" rx="9" fill="#EAF3EA" stroke="#7C8C6B"/><text x="597" y="134">🔐 Auth — Google / Email / Anon</text>
+        <rect x="585" y="152" width="226" height="32" rx="9" fill="#EAF3EA" stroke="#7C8C6B"/><text x="597" y="173">🌐 Hosting — live deploy</text>
+      </g>
+
+      <!-- AI -->
+      <rect x="565" y="235" width="265" height="95" rx="18" fill="#fff" stroke="#C2613D" stroke-width="1.6"/>
+      <text x="697" y="262" text-anchor="middle" font-size="14" font-weight="700" fill="#2B2420">🤖 AI Services</text>
+      <g font-size="11.5" fill="#5A4F45">
+        <rect x="585" y="276" width="226" height="30" rx="9" fill="#FBF2DC" stroke="#D9A441"/><text x="597" y="296">Gemini 2.0 Flash (primary)</text>
+        <text x="585" y="322" font-size="10.5" fill="#8A7E70">↳ Groq Llama-4 fallback</text>
+      </g>
+
+      <!-- links -->
+      <line x1="320" y1="120" x2="563" y2="105" stroke="#8A7E70" stroke-width="1.8" marker-end="url(#a4)"/>
+      <text x="430" y="100" font-size="10" fill="#8A7E70">onSnapshot ⇅ secure rules</text>
+      <line x1="320" y1="230" x2="563" y2="285" stroke="#8A7E70" stroke-width="1.8" marker-end="url(#a4)"/>
+      <text x="405" y="270" font-size="10" fill="#8A7E70">image → JSON triage</text>
+    </svg>
+    <figcaption>Figure 4 — A client-only architecture: the browser talks directly to Google's managed services.</figcaption>
+  </figure>
+
+  <!-- ============ DATA MODEL ============ -->
+  <h2>🗄️ Data Model (Firestore)</h2>
+  <div class="grid">
+    <div class="fcard"><h3><span class="ico">📋</span> issues</h3>
+      <p style="font-size:.85rem"><code>title</code> <code>description</code> <code>category</code> <code>severity</code> <code>status</code> <code>location{lat,lng,city,address}</code> <code>imageData</code> <code>afterImageData</code> <code>reportCount</code> <code>corroborators[]</code> <code>fixVerified</code> <code>fixNote</code> <code>reporterId</code></p></div>
+    <div class="fcard"><h3><span class="ico">👤</span> users</h3>
+      <p style="font-size:.85rem"><code>displayName</code> <code>email</code> <code>role</code> (citizen / authority) <code>jurisdiction</code> <code>points</code> <code>badges</code> — owner-write only.</p></div>
+    <div class="fcard"><h3><span class="ico">🔔</span> notifications</h3>
+      <p style="font-size:.85rem"><code>userId</code> <code>issueId</code> <code>title</code> <code>status</code> <code>read</code> <code>createdAt</code> — owner-read only, created on every status change.</p></div>
+    <div class="fcard"><h3><span class="ico">🛡️</span> Security rules</h3>
+      <p style="font-size:.85rem">Issues: public read, auth-only write, <b>delete blocked</b>. Users: owner-write. Notifications: owner-read, <b>delete blocked</b>. Authority access gated by a pre-approved email allow-list.</p></div>
+  </div>
+
+  <!-- ============ STATS / CHARTS ============ -->
+  <h2>📈 Severity & Category Model</h2>
+  <figure>
+    <svg viewBox="0 0 860 280" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+      <!-- axes -->
+      <line x1="60" y1="20" x2="60" y2="220" stroke="#E5DAC7" stroke-width="1.5"/>
+      <line x1="60" y1="220" x2="820" y2="220" stroke="#E5DAC7" stroke-width="1.5"/>
+      <g font-size="10" fill="#8A7E70" text-anchor="end">
+        <text x="52" y="224">0</text><text x="52" y="170">3</text><text x="52" y="120">5</text><text x="52" y="70">10+</text>
+        <line x1="56" y1="166" x2="820" y2="166" stroke="#EFE6D6"/>
+        <line x1="56" y1="116" x2="820" y2="116" stroke="#EFE6D6"/>
+        <line x1="56" y1="66" x2="820" y2="66" stroke="#EFE6D6"/>
+      </g>
+      <text x="20" y="120" font-size="11" fill="#8A7E70" transform="rotate(-90 20 120)" text-anchor="middle">corroborations →</text>
+      <!-- bars: crowd-severity escalation thresholds -->
+      <g>
+        <rect x="130" y="190" width="90" height="30" rx="6" fill="#7C8C6B"/>
+        <text x="175" y="240" text-anchor="middle" font-size="11" fill="#5A4F45" font-weight="600">1 report</text>
+        <text x="175" y="253" text-anchor="middle" font-size="10" fill="#8A7E70">low</text>
+
+        <rect x="290" y="166" width="90" height="54" rx="6" fill="#D9A441"/>
+        <text x="335" y="240" text-anchor="middle" font-size="11" fill="#5A4F45" font-weight="600">3+ reports</text>
+        <text x="335" y="253" text-anchor="middle" font-size="10" fill="#8A7E70">medium</text>
+
+        <rect x="450" y="116" width="90" height="104" rx="6" fill="#D9772E"/>
+        <text x="495" y="240" text-anchor="middle" font-size="11" fill="#5A4F45" font-weight="600">5+ reports</text>
+        <text x="495" y="253" text-anchor="middle" font-size="10" fill="#8A7E70">high</text>
+
+        <rect x="610" y="66" width="90" height="154" rx="6" fill="#B23A2E"/>
+        <text x="655" y="240" text-anchor="middle" font-size="11" fill="#5A4F45" font-weight="600">10+ reports</text>
+        <text x="655" y="253" text-anchor="middle" font-size="10" fill="#8A7E70">critical</text>
+      </g>
+      <text x="430" y="14" text-anchor="middle" font-size="12" font-weight="700" fill="#2B2420">Crowd-driven priority escalation</text>
+    </svg>
+    <figcaption>Figure 5 — The more neighbours corroborate an issue, the higher the AI escalates its priority.</figcaption>
+  </figure>
+  <p><b>11 categories:</b> pothole · garbage · streetlight · water leakage · drainage · sewage · road damage · fallen tree · stray animals · public toilet · other.
+     <b>Lifecycle:</b> reported → acknowledged → in&nbsp;progress → resolved (↺ reopened).</p>
+
+  <!-- ============ TECH STACK ============ -->
+  <h2>🧰 Technology Stack</h2>
+  <h3>Google technologies (core of the build)</h3>
+  <div class="chips">
+    <span class="chip g"><span class="dot" style="background:#D9A441"></span>Google Gemini 2.0 Flash (via Google AI Studio)</span>
+    <span class="chip g"><span class="dot" style="background:#D9A441"></span>Firebase Firestore</span>
+    <span class="chip g"><span class="dot" style="background:#D9A441"></span>Firebase Authentication</span>
+    <span class="chip g"><span class="dot" style="background:#D9A441"></span>Firebase Hosting</span>
+  </div>
+  <h3>Frontend & supporting</h3>
+  <div class="chips">
+    <span class="chip">React 19</span>
+    <span class="chip">TypeScript</span>
+    <span class="chip">Vite (rolldown)</span>
+    <span class="chip">React Router</span>
+    <span class="chip">Leaflet + OpenStreetMap</span>
+    <span class="chip">Web Speech API</span>
+    <span class="chip">getUserMedia (camera)</span>
+    <span class="chip">Nominatim geocoding</span>
+    <span class="chip">PWA (manifest + service worker)</span>
+    <span class="chip">canvas-confetti</span>
+    <span class="chip">Groq Llama-4 (AI fallback)</span>
+  </div>
+
+  <!-- ============ HACKATHON COMPLIANCE ============ -->
+  <h2>✅ Hackathon Compliance</h2>
+  <p>MuniPeople is built to meet the VIBE2SHIP General Guidelines in full:</p>
+  <div class="comply">
+    <div class="crow"><div class="check">✓</div><div>
+      <b>Eligibility — solo project.</b> MuniPeople is the original, individual work of a single
+      participant, registered before the deadline. No team involvement.</div></div>
+    <div class="crow"><div class="check">✓</div><div>
+      <b>Mandatory tool — Google AI Studio.</b> The product's intelligence is powered by <b>Google
+      Gemini, accessed through Google AI Studio</b> (model <code>gemini-2.0-flash</code> via the
+      <code>@google/genai</code> SDK). Gemini drives image triage, complaint drafting, and before/after
+      fix verification — it is the core of the solution, not an add-on.</div></div>
+    <div class="crow"><div class="check">✓</div><div>
+      <b>Originality &amp; fair use.</b> All application code is original. Third-party building blocks —
+      React, Firebase, Leaflet/OpenStreetMap, Nominatim, Groq, canvas-confetti — are open-source or
+      publicly available APIs, used per their licenses and credited in this document and the repository.</div></div>
+    <div class="crow"><div class="check">✓</div><div>
+      <b>No plagiarism / fresh build.</b> Built from scratch for this hackathon; not a resubmission of a
+      prior project. Source history is available for originality checks.</div></div>
+    <div class="crow"><div class="check">✓</div><div>
+      <b>Additional tech.</b> Supplementary tools beyond Google AI Studio are used as permitted by the
+      problem statement, with Google technologies remaining central.</div></div>
+  </div>
+  <div class="callout">
+    <b>Google-tech weighting:</b> Beyond the mandatory Google AI Studio requirement, the entire backend
+    and AI layer runs on Google's stack — Gemini for intelligence and Firebase for data, auth, and
+    hosting — maximising the "use of Google technology" scoring criterion.
+  </div>
+
+  <!-- ============ DEMO / LINKS ============ -->
+  <h2>🔗 Demo &amp; Links</h2>
+  <table>
+    <tr><th>Resource</th><th>Link</th></tr>
+    <tr><td>Live application</td><td><a href="https://junkcivicsense.web.app">https://junkcivicsense.web.app</a></td></tr>
+    <tr><td>Submission label</td><td><code>MuniPeople</code></td></tr>
+    <tr><td>Problem statement</td><td>Community Hero — Hyperlocal Problem Solver</td></tr>
+    <tr><td>Core AI</td><td>Google Gemini 2.0 Flash (Google AI Studio)</td></tr>
+    <tr><td>Platform</td><td>Firebase (Firestore · Auth · Hosting)</td></tr>
+  </table>
+
+  <h3>Try it in 30 seconds</h3>
+  <ul>
+    <li>Open the live link on your phone → sign in (Google / email / anonymous).</li>
+    <li>Tap <b>Report</b> → snap a photo of any civic issue → watch Gemini classify it instantly.</li>
+    <li>See it appear on the live map, colour-coded by severity.</li>
+    <li>Sign in as the pre-authorised authority → resolve it with an "after" photo → watch the AI verify the fix.</li>
+  </ul>
+
+  <footer>
+    MuniPeople · Built for VIBE2SHIP (Coding Ninjas × Google for Developers) · Powered by Google Gemini &amp; Firebase<br/>
+    Document generated June 28, 2026
+  </footer>
+
+</div>
+</body>
+</html>
