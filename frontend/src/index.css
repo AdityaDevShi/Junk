@@ -598,6 +598,81 @@ p {
   font-size: 0.9rem;
   letter-spacing: 0.02em;
 }
+
+/* Predictive insights */
+.insights {
+  margin: 1rem 0;
+}
+.insights-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.insights-head h2 {
+  margin: 0;
+}
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+.insight-card {
+  background: var(--surface, #fff);
+  border: 1px solid var(--line, #e5dac7);
+  border-left: 4px solid var(--muted, #8a7e70);
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  animation: insight-in 0.35s ease both;
+}
+@keyframes insight-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.insight-card.hotspot {
+  border-left-color: #c2613d;
+}
+.insight-card.trend {
+  border-left-color: #4f7cac;
+}
+.insight-card.seasonal {
+  border-left-color: #4f9aac;
+}
+.insight-card.risk {
+  border-left-color: #b23a2e;
+}
+.insight-card.info {
+  border-left-color: #d9a441;
+}
+.insight-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted, #8a7e70);
+}
+.insight-card strong {
+  font-size: 0.98rem;
+  line-height: 1.25;
+}
+.insight-action {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--clay-dark, #a04e30);
+}
+.insights-credit {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--muted, #8a7e70);
+  font-style: italic;
+}
 .camera-error {
   background: var(--surface);
   border-radius: var(--radius);

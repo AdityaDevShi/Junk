@@ -5,6 +5,7 @@ import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
 import { compressImage } from "../lib/image";
 import { getLocation } from "../lib/geo";
 import { Loader } from "../components/Loader";
+import { PredictiveInsights } from "../components/PredictiveInsights";
 import { useAuth } from "../lib/auth";
 
 const SEV_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
@@ -173,6 +174,8 @@ export default function GovPanelPage() {
           <span className="stat-label">Resolved</span>
         </div>
       </section>
+
+      <PredictiveInsights issues={scoped} />
 
       <input
         ref={fileRef}

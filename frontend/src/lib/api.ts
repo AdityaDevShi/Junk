@@ -16,7 +16,8 @@ import {
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { classifyIssue, draftComplaint, verifyFix } from "./gemini";
+import { classifyIssue, draftComplaint, verifyFix, predictInsights } from "./gemini";
+import type { Insight } from "./gemini";
 import type { Issue, Severity } from "../types";
 
 const COLL = "issues";
@@ -50,6 +51,100 @@ function haversineMeters(
 
 function mapDoc(d: QueryDocumentSnapshot<DocumentData>): Issue {
   return { id: d.id, ...(d.data() as object) } as Issue;
+}
+
+function secondsOf(ts?: { _seconds?: number; seconds?: number } | null): number {
+  if (!ts) return 0;
+  return (ts as { _seconds?: number; seconds?: number })._seconds ??
+    (ts as { _seconds?: number; seconds?: number }).seconds ?? 0;
+}
+
+function topCounts(rec: Record<string, number>, n = 5): string {
+  return Object.entries(rec)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(", ");
+}
+
+// Compact text digest of current reports for the predictive model.
+function summarizeForInsights(issues: Issue[]): string {
+  const now = Date.now() / 1000;
+  const open = issues.filter((i) => i.status !== "resolved");
+  const byCat: Record<string, number> = {};
+  const byCity: Record<string, number> = {};
+  const bySev: Record<string, number> = {};
+  let recent7 = 0;
+  let ageSum = 0;
+  for (const i of issues) {
+    byCat[i.category] = (byCat[i.category] || 0) + (i.reportCount || 1);
+    const city = i.location?.city || "Unknown";
+    byCity[city] = (byCity[city] || 0) + 1;
+    bySev[i.severity] = (bySev[i.severity] || 0) + 1;
+    const created = secondsOf(i.createdAt);
+    if (created && now - created <= 7 * 86400) recent7++;
+  }
+  for (const i of open) {
+    const created = secondsOf(i.createdAt);
+    if (created) ageSum += (now - created) / 86400;
+  }
+  const avgAge = open.length ? (ageSum / open.length).toFixed(1) : "0";
+  return [
+    `Total reports: ${issues.length} (open: ${open.length}, resolved: ${issues.length - open.length})`,
+    `Reports in last 7 days: ${recent7}`,
+    `Average age of open issues: ${avgAge} days`,
+    `By category (weighted): ${topCounts(byCat)}`,
+    `By area/city: ${topCounts(byCity)}`,
+    `By severity: ${topCounts(bySev)}`,
+  ].join("\n");
+}
+
+// Deterministic insights when the AI is unavailable — never blank.
+function heuristicInsights(issues: Issue[]): Insight[] {
+  const out: Insight[] = [];
+  const byCat: Record<string, number> = {};
+  const byCity: Record<string, number> = {};
+  for (const i of issues) {
+    byCat[i.category] = (byCat[i.category] || 0) + (i.reportCount || 1);
+    const city = i.location?.city || "Unknown";
+    byCity[city] = (byCity[city] || 0) + 1;
+  }
+  const topCat = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
+  const topCity = Object.entries(byCity).sort((a, b) => b[1] - a[1])[0];
+  const crit = issues.filter((i) => i.severity === "critical").length;
+  const monsoon = issues.filter((i) =>
+    ["drainage", "water_leakage", "sewage"].includes(i.category)
+  ).length;
+
+  if (topCat)
+    out.push({
+      tag: "trend",
+      title: `${topCat[0].replace(/_/g, " ")} is trending`,
+      detail: `${topCat[0].replace(/_/g, " ")} is the most reported issue (${topCat[1]} reports).`,
+      action: `Schedule a targeted ${topCat[0].replace(/_/g, " ")} clearance drive.`,
+    });
+  if (topCity && topCity[0] !== "Unknown")
+    out.push({
+      tag: "hotspot",
+      title: `Hotspot: ${topCity[0]}`,
+      detail: `${topCity[0]} has the highest report volume (${topCity[1]} issues).`,
+      action: `Prioritise field teams toward ${topCity[0]}.`,
+    });
+  if (monsoon >= 2)
+    out.push({
+      tag: "seasonal",
+      title: "Monsoon drainage risk",
+      detail: `${monsoon} drainage/water/sewage reports suggest rising waterlogging risk.`,
+      action: "Pre-clean stormwater drains before the next spell of rain.",
+    });
+  if (crit >= 1)
+    out.push({
+      tag: "risk",
+      title: "Critical hazards open",
+      detail: `${crit} critical-severity issue(s) pose immediate public-health risk.`,
+      action: "Dispatch rapid-response teams to critical reports first.",
+    });
+  return out.slice(0, 5);
 }
 
 export interface ReportInput {
@@ -316,6 +411,15 @@ export const api = {
   },
   async markAllRead(ids: string[]) {
     await Promise.all(ids.map((id) => updateDoc(doc(db, "notifications", id), { read: true })));
+  },
+
+  // Predictive insights over a set of issues — AI-powered with heuristic fallback.
+  async getPredictiveInsights(
+    issues: Issue[]
+  ): Promise<{ insights: Insight[]; aiPowered: boolean }> {
+    const ai = await predictInsights(summarizeForInsights(issues));
+    if (ai && ai.length) return { insights: ai, aiPowered: true };
+    return { insights: heuristicInsights(issues), aiPowered: false };
   },
 
   async draftComplaint(id: string): Promise<{ complaintDraft: string; issue: Issue }> {

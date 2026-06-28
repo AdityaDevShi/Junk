@@ -176,6 +176,59 @@ export interface FixVerification {
   note: string;
 }
 
+export interface Insight {
+  title: string;
+  detail: string;
+  action: string;
+  tag: "hotspot" | "trend" | "seasonal" | "risk" | "info";
+}
+
+// Forward-looking municipal analysis over aggregated report data.
+// Returns null if Gemini is unavailable (caller falls back to a heuristic).
+export async function predictInsights(summary: string): Promise<Insight[] | null> {
+  const client = getAI();
+  if (!client) return null;
+  try {
+    const res = await client.models.generateContent({
+      model: MODEL,
+      contents: `You are a municipal data-analyst AI for an Indian city civic-issue platform.
+From the aggregated report data below, produce 3 to 5 forward-looking PREDICTIVE insights:
+emerging hotspots, categories trending up, seasonal/monsoon risks, and public-health risks.
+For each, give one concrete recommended pre-emptive action for the municipality.
+Ground every insight in the actual numbers provided — do not invent locations or data.
+
+DATA:
+${summary}
+
+Return ONLY a JSON array. Each item:
+{"title": string (<= 8 words),
+ "detail": string (1 factual sentence grounded in the data),
+ "action": string (1 recommended municipal action),
+ "tag": one of ["hotspot","trend","seasonal","risk","info"]}`,
+      config: { responseMimeType: "application/json", temperature: 0.4 },
+    });
+    const cleaned = (res.text || "")
+      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+    const arr = JSON.parse(cleaned);
+    if (!Array.isArray(arr)) return null;
+    return arr.slice(0, 5).map((x) => ({
+      title: String(x.title || "Insight"),
+      detail: String(x.detail || ""),
+      action: String(x.action || ""),
+      tag: (["hotspot", "trend", "seasonal", "risk", "info"].includes(x.tag)
+        ? x.tag
+        : "info") as Insight["tag"],
+    }));
+  } catch (err) {
+    console.warn("[gemini] predictInsights failed —", err);
+    return null;
+  }
+}
+
 // Compare the citizen's BEFORE photo with the authority's AFTER photo.
 // Returns null if Gemini is unavailable (verification is best-effort).
 export async function verifyFix(
