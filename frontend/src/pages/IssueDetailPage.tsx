@@ -88,8 +88,16 @@ export default function IssueDetailPage() {
         ← Back to map
       </Link>
 
-      {issue.imageData && (
-        <img className="detail-img" src={issue.imageData} alt={issue.title} />
+      {issue.mediaType === "video" && issue.videoData ? (
+        <video
+          className="detail-img"
+          src={issue.videoData}
+          poster={issue.imageData ?? undefined}
+          controls
+          playsInline
+        />
+      ) : (
+        issue.imageData && <img className="detail-img" src={issue.imageData} alt={issue.title} />
       )}
 
       <div className="row gap wrap">

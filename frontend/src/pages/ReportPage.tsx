@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { compressImage } from "../lib/image";
+import { extractVideoFrame, inlineVideoIfSmall } from "../lib/video";
 import { getLocation } from "../lib/geo";
 import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
@@ -28,6 +29,9 @@ export default function ReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ReportResult | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [mediaType, setMediaType] = useState<"image" | "video">("image");
+  const [videoUrl, setVideoUrl] = useState<string | null>(null); // object URL for playback
+  const [videoData, setVideoData] = useState<string | null>(null); // inline clip for storage
 
   // Celebrate a successful report.
   useEffect(() => {
@@ -52,20 +56,39 @@ export default function ReportPage() {
     }
   }
 
-  async function handleImageFile(file: File) {
+  function clearVideo() {
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    setVideoUrl(null);
+    setVideoData(null);
+  }
+
+  async function handleMediaFile(file: File) {
     try {
-      const c = await compressImage(file);
-      setPreview(c.dataUrl);
-      setBase64(c.base64);
-      setError(null);
+      if (file.type.startsWith("video")) {
+        const frame = await extractVideoFrame(file); // AI analyses + thumbnails a keyframe
+        clearVideo();
+        setPreview(frame.dataUrl);
+        setBase64(frame.base64);
+        setVideoUrl(URL.createObjectURL(file));
+        setVideoData(await inlineVideoIfSmall(file)); // keep the clip only if it fits Firestore
+        setMediaType("video");
+        setError(null);
+      } else {
+        const c = await compressImage(file);
+        clearVideo();
+        setPreview(c.dataUrl);
+        setBase64(c.base64);
+        setMediaType("image");
+        setError(null);
+      }
     } catch {
-      setError("Couldn't read that image. Try another.");
+      setError("Couldn't read that file. Try another photo or video.");
     }
   }
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) void handleImageFile(file);
+    if (file) void handleMediaFile(file);
   }
 
   function resetForm() {
@@ -73,6 +96,8 @@ export default function ReportPage() {
     setBase64(null);
     setNote("");
     setResult(null);
+    clearVideo();
+    setMediaType("image");
     setPhase("capture");
   }
 
@@ -101,6 +126,8 @@ export default function ReportPage() {
         location,
         reporterId: user.uid,
         reporterName,
+        mediaType,
+        videoData,
       });
       setResult(issue);
       setPhase("done");
@@ -155,8 +182,18 @@ export default function ReportPage() {
             : "Our AI agent triaged your report:"}
         </p>
 
-        {result.imageData && (
-          <img className="result-img" src={result.imageData} alt={result.title} />
+        {result.mediaType === "video" && result.videoData ? (
+          <video
+            className="result-img"
+            src={result.videoData}
+            poster={result.imageData ?? undefined}
+            controls
+            playsInline
+          />
+        ) : (
+          result.imageData && (
+            <img className="result-img" src={result.imageData} alt={result.title} />
+          )
         )}
 
         <div className="result-meta">
@@ -213,20 +250,26 @@ export default function ReportPage() {
   return (
     <div className="report-page">
       <h1>Report an issue</h1>
-      <p className="muted">Snap a photo — our AI fills in the rest.</p>
+      <p className="muted">Snap a photo or record a video — our AI fills in the rest.</p>
 
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
-        capture="environment"
+        accept="image/*,video/*"
         hidden
         onChange={onFile}
       />
 
       {preview ? (
         <div className="preview-wrap">
-          <img className="preview" src={preview} alt="preview" />
+          {mediaType === "video" && videoUrl ? (
+            <>
+              <video className="preview" src={videoUrl} controls playsInline />
+              <p className="muted small center">🎥 AI analyses a key frame from your video.</p>
+            </>
+          ) : (
+            <img className="preview" src={preview} alt="preview" />
+          )}
           <div className="row gap" style={{ justifyContent: "center" }}>
             <button className="btn btn-ghost btn-sm" onClick={() => setShowCamera(true)}>
               📷 Retake
@@ -239,10 +282,10 @@ export default function ReportPage() {
       ) : (
         <div className="capture-actions">
           <button className="btn btn-primary btn-block" onClick={() => setShowCamera(true)}>
-            📷 Take a photo
+            📷 Camera — photo or video
           </button>
           <button className="btn btn-ghost btn-block" onClick={() => fileRef.current?.click()}>
-            🖼 Upload from device
+            🖼 Upload photo or video
           </button>
         </div>
       )}
@@ -293,7 +336,7 @@ export default function ReportPage() {
         <CameraCapture
           onCapture={(f) => {
             setShowCamera(false);
-            void handleImageFile(f);
+            void handleMediaFile(f);
           }}
           onClose={() => setShowCamera(false)}
         />

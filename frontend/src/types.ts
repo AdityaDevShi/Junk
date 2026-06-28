@@ -24,6 +24,8 @@ export interface Issue {
   location: IssueLocation | null;
   imageData: string | null;
   afterImageData: string | null;
+  mediaType?: "image" | "video";
+  videoData?: string | null;
   reporterId: string;
   reporterName: string;
   reportCount: number;

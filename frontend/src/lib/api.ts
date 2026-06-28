@@ -59,7 +59,12 @@ export interface ReportInput {
   location?: { lat: number; lng: number; address?: string; city?: string } | null;
   reporterId?: string;
   reporterName?: string;
+  mediaType?: "image" | "video";
+  videoData?: string | null; // inline clip data URL, stored only if it fits Firestore
 }
+
+// Firestore docs cap at ~1 MB; keep the inline clip well under that.
+const MAX_INLINE_VIDEO = 900_000;
 
 async function getIssue(id: string): Promise<Issue> {
   const s = await getDoc(doc(db, COLL, id));
@@ -191,6 +196,9 @@ export const api = {
       location: input.location ?? null,
       imageData: `data:${input.mimeType};base64,${input.imageBase64}`,
       afterImageData: null,
+      mediaType: input.mediaType ?? "image",
+      videoData:
+        input.videoData && input.videoData.length <= MAX_INLINE_VIDEO ? input.videoData : null,
       reporterId: input.reporterId ?? "anonymous",
       reporterName: input.reporterName ?? "Anonymous",
       corroborators: [] as string[],
