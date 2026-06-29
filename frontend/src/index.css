@@ -12,6 +12,11 @@
   --primary-dark: #0c6f66;
   --primary-soft: #dfeeec;
 
+  /* warm CTA accent (matches the beige palette) */
+  --cta: #d9772e;
+  --cta-deep: #c2613d;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
   /* severity (semantic, kept) */
   --sev-low: #16a34a;
   --sev-medium: #f59e0b;
@@ -134,22 +139,40 @@ p {
   font-family: inherit;
   cursor: pointer;
   text-decoration: none;
-  transition: transform 0.05s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.18s var(--ease), background 0.25s ease, box-shadow 0.25s var(--ease);
 }
 .btn:active {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.985);
 }
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 .btn-primary {
-  background: var(--primary);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e58a3a 0%, #c85b36 100%);
   color: #fff;
-  box-shadow: 0 6px 16px rgba(15, 139, 128, 0.28);
+  box-shadow: 0 6px 18px rgba(200, 91, 54, 0.3);
+}
+/* light sheen that sweeps across on hover */
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.6s var(--ease);
+  pointer-events: none;
+}
+.btn-primary:hover::after {
+  left: 135%;
 }
 .btn-primary:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, #ed9748 0%, #b84f2e 100%);
 }
 .btn-ghost {
   background: var(--surface);
@@ -1498,14 +1521,66 @@ a.issue-card:hover {
 .detail,
 .leaderboard,
 .gov {
-  animation: fadeInUp 0.35s ease both;
+  animation: fadeInUp 0.45s var(--ease) both;
 }
 .result-check {
-  animation: pop 0.45s ease both;
+  animation: pop 0.5s var(--ease) both;
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(15, 139, 128, 0.32);
+  box-shadow: 0 12px 26px rgba(200, 91, 54, 0.38);
+}
+
+/* Staggered card entrances */
+.cards > .issue-card {
+  animation: fadeInUp 0.5s var(--ease) both;
+}
+.cards > .issue-card:nth-child(2) {
+  animation-delay: 0.04s;
+}
+.cards > .issue-card:nth-child(3) {
+  animation-delay: 0.08s;
+}
+.cards > .issue-card:nth-child(4) {
+  animation-delay: 0.12s;
+}
+.cards > .issue-card:nth-child(5) {
+  animation-delay: 0.16s;
+}
+.cards > .issue-card:nth-child(6) {
+  animation-delay: 0.2s;
+}
+.cards > .issue-card:nth-child(n + 7) {
+  animation-delay: 0.24s;
+}
+.insights-grid > .insight-card:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.insights-grid > .insight-card:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.insights-grid > .insight-card:nth-child(4) {
+  animation-delay: 0.18s;
+}
+.insights-grid > .insight-card:nth-child(5) {
+  animation-delay: 0.24s;
+}
+
+/* Gentle attention glow on the main Report CTA */
+.home-hero .btn-primary {
+  animation: ctaGlow 2.8s ease-in-out infinite;
+}
+.home-hero .btn-primary:hover {
+  animation-play-state: paused;
+}
+@keyframes ctaGlow {
+  0%,
+  100% {
+    box-shadow: 0 6px 18px rgba(200, 91, 54, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 28px rgba(217, 119, 46, 0.55);
+  }
 }
 a.issue-card,
 .gov-row {
