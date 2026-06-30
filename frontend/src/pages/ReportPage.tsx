@@ -7,6 +7,7 @@ import { getLocation } from "../lib/geo";
 import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
 import { SeverityBadge, categoryLabel, AuthenticityBadge } from "../components/badges";
+import { CameraIcon, UploadIcon, RetakeIcon, PinIcon } from "../components/icons";
 import { Loader } from "../components/Loader";
 import { CameraCapture } from "../components/CameraCapture";
 import { VoiceButton } from "../components/VoiceButton";
@@ -278,20 +279,20 @@ export default function ReportPage() {
           )}
           <div className="row gap" style={{ justifyContent: "center" }}>
             <button className="btn btn-ghost btn-sm" onClick={() => setShowCamera(true)}>
-              📷 Retake
+              <RetakeIcon width={16} height={16} /> Retake
             </button>
             <button className="btn btn-ghost btn-sm" onClick={() => fileRef.current?.click()}>
-              🖼 Upload
+              <UploadIcon width={16} height={16} /> Upload
             </button>
           </div>
         </div>
       ) : (
         <div className="capture-actions">
           <button className="btn btn-primary btn-block" onClick={() => setShowCamera(true)}>
-            📷 Camera — photo or video
+            <CameraIcon /> Camera — photo or video
           </button>
           <button className="btn btn-ghost btn-block" onClick={() => fileRef.current?.click()}>
-            🖼 Upload photo or video
+            <UploadIcon /> Upload photo or video
           </button>
         </div>
       )}
@@ -309,7 +310,8 @@ export default function ReportPage() {
 
       {location ? (
         <div className="loc-line">
-          📍 {location.address ?? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`}
+          <PinIcon width={16} height={16} />{" "}
+          {location.address ?? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`}
           <button className="link-btn" onClick={() => void grabLocation()}>
             update
           </button>
@@ -320,7 +322,13 @@ export default function ReportPage() {
           disabled={locating}
           onClick={() => void grabLocation()}
         >
-          {locating ? "Getting location…" : "📍 Use my location (required)"}
+          {locating ? (
+            "Getting location…"
+          ) : (
+            <>
+              <PinIcon width={16} height={16} /> Use my location (required)
+            </>
+          )}
         </button>
       )}
 

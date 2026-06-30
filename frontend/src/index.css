@@ -1588,6 +1588,77 @@ a.issue-card:hover {
     box-shadow: 0 8px 26px rgba(200, 91, 38, 0.5);
   }
 }
+
+/* ---- Inline SVG icons ---- */
+.btn svg,
+.loc-line svg,
+.bell-ic {
+  flex: 0 0 auto;
+  transition: transform 0.2s var(--ease);
+}
+.btn:hover svg {
+  transform: scale(1.14);
+}
+.loc-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+/* Brand mark — gentle idle bob, playful tilt on hover */
+.brand-mark {
+  display: inline-block;
+  filter: drop-shadow(0 2px 4px rgba(179, 71, 31, 0.25));
+  transition: transform 0.25s var(--ease);
+  animation: pinBob 3.4s ease-in-out infinite;
+}
+.brand:hover .brand-mark {
+  transform: translateY(-2px) rotate(-7deg) scale(1.06);
+  animation-play-state: paused;
+}
+@keyframes pinBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Notification bell */
+.bell-ic {
+  display: block;
+  color: var(--text);
+}
+.bell-btn:hover .bell-ic {
+  transform: scale(1.1);
+}
+.bell-btn.has-unread .bell-ic {
+  color: var(--cta);
+  transform-origin: top center;
+  animation: bellSwing 2.4s ease-in-out infinite;
+}
+@keyframes bellSwing {
+  0%,
+  55%,
+  100% {
+    transform: rotate(0);
+  }
+  62% {
+    transform: rotate(13deg);
+  }
+  72% {
+    transform: rotate(-10deg);
+  }
+  82% {
+    transform: rotate(6deg);
+  }
+  90% {
+    transform: rotate(-3deg);
+  }
+}
 a.issue-card,
 .gov-row {
   transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease;

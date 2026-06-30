@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { api, type AppNotification } from "../lib/api";
+import { BellIcon } from "./icons";
 
 const STATUS_LABEL: Record<string, string> = {
   reported: "reported",
@@ -37,8 +38,13 @@ export function NotificationBell() {
 
   return (
     <div className="bell-wrap">
-      <button className="bell-btn" onClick={() => setOpen((o) => !o)} aria-label="Notifications">
-        🔔{unread > 0 && <span className="bell-badge">{unread}</span>}
+      <button
+        className={`bell-btn${unread > 0 ? " has-unread" : ""}`}
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Notifications"
+      >
+        <BellIcon className="bell-ic" />
+        {unread > 0 && <span className="bell-badge">{unread}</span>}
       </button>
       {open && (
         <div className="bell-menu">

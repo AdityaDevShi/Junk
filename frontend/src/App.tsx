@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./lib/auth";
 import { NotificationBell } from "./components/NotificationBell";
+import { BrandLogo } from "./components/icons";
 
 export default function App() {
   const loc = useLocation();
@@ -18,7 +19,7 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <Link to="/" className="brand">
-          <span className="brand-mark">📍</span>
+          <BrandLogo className="brand-mark" />
           <span>MuniPeople</span>
         </Link>
         <nav className="nav">
