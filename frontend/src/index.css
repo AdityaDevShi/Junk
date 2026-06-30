@@ -2,12 +2,12 @@
 
 :root {
   /* warm, aesthetic palette */
-  --bg: #f3ebdd;
-  --bg-tint: #efe4d2;
-  --surface: #fffdf8;
+  --bg: #e8dcc5;
+  --bg-tint: #ddccaf;
+  --surface: #faf3e6;
   --text: #2c2620;
-  --muted: #8a7d6b;
-  --border: #e7dcc8;
+  --muted: #837764;
+  --border: #ddd0b8;
   --primary: #0f8b80;
   --primary-dark: #0c6f66;
   --primary-soft: #dfeeec;
@@ -151,9 +151,10 @@ p {
 .btn-primary {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #e58a3a 0%, #c85b36 100%);
+  background: linear-gradient(135deg, #d97328 0%, #b3471f 100%);
   color: #fff;
-  box-shadow: 0 6px 18px rgba(200, 91, 54, 0.3);
+  text-shadow: 0 1px 2px rgba(74, 26, 8, 0.4);
+  box-shadow: 0 6px 18px rgba(179, 71, 31, 0.34);
 }
 /* light sheen that sweeps across on hover */
 .btn-primary::after {
@@ -172,7 +173,7 @@ p {
   left: 135%;
 }
 .btn-primary:hover {
-  background: linear-gradient(135deg, #ed9748 0%, #b84f2e 100%);
+  background: linear-gradient(135deg, #e07f30 0%, #a23f1c 100%);
 }
 .btn-ghost {
   background: var(--surface);
@@ -1528,7 +1529,7 @@ a.issue-card:hover {
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 26px rgba(200, 91, 54, 0.38);
+  box-shadow: 0 12px 26px rgba(179, 71, 31, 0.42);
 }
 
 /* Staggered card entrances */
@@ -1576,10 +1577,10 @@ a.issue-card:hover {
 @keyframes ctaGlow {
   0%,
   100% {
-    box-shadow: 0 6px 18px rgba(200, 91, 54, 0.3);
+    box-shadow: 0 6px 18px rgba(179, 71, 31, 0.34);
   }
   50% {
-    box-shadow: 0 8px 28px rgba(217, 119, 46, 0.55);
+    box-shadow: 0 8px 26px rgba(200, 91, 38, 0.5);
   }
 }
 a.issue-card,
