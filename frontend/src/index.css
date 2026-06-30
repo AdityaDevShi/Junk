@@ -119,6 +119,11 @@ p {
 .nav a.active {
   color: var(--primary);
 }
+/* the Report CTA is a filled button — keep its text white (beats .nav a) */
+.nav a.btn-primary,
+.nav a.btn-primary:hover {
+  color: #fff;
+}
 .app-main {
   max-width: 1140px;
   margin: 0 auto;
