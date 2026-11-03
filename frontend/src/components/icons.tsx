@@ -62,23 +62,60 @@ export function BellIcon(p: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Coloured brand mark — a terracotta pin with a check, matching the warm theme.
+export function PlusIcon(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} width={16} height={16} strokeWidth={2.2} {...p}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+export function SearchIcon(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} width={17} height={17} {...p}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m20 20-4.2-4.2" />
+    </svg>
+  );
+}
+
+export function MapIcon(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} width={16} height={16} {...p}>
+      <path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z" />
+      <path d="M9 4v14M15 6v14" />
+    </svg>
+  );
+}
+
+export function ListIcon(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} width={16} height={16} {...p}>
+      <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />
+    </svg>
+  );
+}
+
+export function CheckIcon(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} strokeWidth={2.4} {...p}>
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
+// Brand mark — an ink tile with a map pin and a signal-orange "fixed" dot.
 export function BrandLogo(p: SVGProps<SVGSVGElement>) {
   return (
-    <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden {...p}>
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden {...p}>
+      <rect width="32" height="32" rx="5" fill="#17181b" />
       <path
-        d="M16 2C9.4 2 4 7.1 4 13.4 4 21.2 16 30 16 30s12-8.8 12-16.6C28 7.1 22.6 2 16 2z"
-        fill="#d9772e"
-      />
-      <circle cx="16" cy="13" r="5.6" fill="#fffaf0" />
-      <path
-        d="M13.3 13.2l1.9 1.9 3.6-3.9"
-        stroke="#c2613d"
-        strokeWidth="1.9"
-        strokeLinecap="round"
+        d="M16 6.5c-4 0-7.2 3-7.2 6.9 0 4.9 7.2 11.6 7.2 11.6s7.2-6.7 7.2-11.6c0-3.9-3.2-6.9-7.2-6.9z"
+        stroke="#fffdf9"
+        strokeWidth="2"
         strokeLinejoin="round"
-        fill="none"
       />
+      <circle cx="16" cy="13.4" r="2.6" fill="#d4461c" />
     </svg>
   );
 }

@@ -32,11 +32,10 @@ export default function LeaderboardPage() {
       <section className="score-card card">
         <div className="score-top">
           <div>
-            <span className="muted small">Your Nagrik Score</span>
+            <span className="kicker">Your Nagrik Score</span>
             <div className="score-num">{score.points}</div>
             <span className="tier-badge">{score.tier}</span>
           </div>
-          <div className="score-emoji">🦸</div>
         </div>
         <div className="score-breakdown">
           <div>
@@ -53,7 +52,7 @@ export default function LeaderboardPage() {
           </div>
         </div>
         {score.nextTier && (
-          <p className="muted small" style={{ color: "rgba(255,255,255,0.85)" }}>
+          <p className="small score-next">
             {score.toNext} pts to <strong>{score.nextTier}</strong>
           </p>
         )}
@@ -63,7 +62,7 @@ export default function LeaderboardPage() {
         <ImpactCharts issues={issues} />
 
         <section className="card lb-card">
-          <h2>🏆 Civic-Health Leaderboard</h2>
+          <h2>Civic-health leaderboard</h2>
           <p className="muted small">Ranked by resolution rate — who actually fixes things.</p>
           <div className="city-table">
             <div className="city-row head">

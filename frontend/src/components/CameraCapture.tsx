@@ -162,13 +162,13 @@ export function CameraCapture({
                   className={mode === "photo" ? "active" : ""}
                   onClick={() => setMode("photo")}
                 >
-                  📷 Photo
+                  Photo
                 </button>
                 <button
                   className={mode === "video" ? "active" : ""}
                   onClick={() => setMode("video")}
                 >
-                  🎥 Video
+                  Video
                 </button>
               </div>
             )}

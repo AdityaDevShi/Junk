@@ -41,7 +41,7 @@ export function VoiceButton({ onText }: { onText: (text: string) => void }) {
       className={`btn btn-ghost btn-sm voice-btn${listening ? " listening" : ""}`}
       onClick={toggle}
     >
-      {listening ? "🎙 Listening… tap to stop" : "🎤 Speak the issue"}
+      {listening ? "Listening… tap to stop" : "Speak the issue"}
     </button>
   );
 }

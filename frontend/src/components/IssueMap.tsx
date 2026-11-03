@@ -5,12 +5,13 @@ import "leaflet/dist/leaflet.css";
 import { Link } from "react-router-dom";
 import type { Issue, Severity } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "./badges";
+import { PinIcon } from "./icons";
 
 export const SEV_COLORS: Record<Severity, string> = {
-  low: "#16a34a",
-  medium: "#f59e0b",
-  high: "#ea580c",
-  critical: "#dc2626",
+  low: "#4f7a5c",
+  medium: "#d99a1e",
+  high: "#d4561c",
+  critical: "#b3261e",
 };
 
 function markerIcon(severity: Severity, count: number): L.DivIcon {
@@ -135,7 +136,7 @@ export default function IssueMap({
         className="locate-btn"
         onClick={() => (userLoc ? mapRef.current?.setView(userLoc, 15) : onLocate?.())}
       >
-        📍 My location
+        <PinIcon width={15} height={15} /> My location
       </button>
 
       <div className="map-legend">

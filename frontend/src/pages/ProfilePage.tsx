@@ -95,7 +95,7 @@ export default function ProfilePage() {
         <button className="btn btn-primary" disabled={saving} onClick={() => void save()}>
           {saving ? "Saving…" : "Save"}
         </button>
-        {saved && <span className="muted small">✓ Saved</span>}
+        {saved && <span className="muted small">Saved</span>}
       </div>
 
       <hr className="sep" />

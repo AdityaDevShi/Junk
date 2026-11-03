@@ -7,7 +7,7 @@ import { getLocation } from "../lib/geo";
 import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
 import { SeverityBadge, categoryLabel, AuthenticityBadge } from "../components/badges";
-import { CameraIcon, UploadIcon, RetakeIcon, PinIcon } from "../components/icons";
+import { CameraIcon, UploadIcon, RetakeIcon, PinIcon, CheckIcon } from "../components/icons";
 import { Loader } from "../components/Loader";
 import { CameraCapture } from "../components/CameraCapture";
 import { VoiceButton } from "../components/VoiceButton";
@@ -172,7 +172,9 @@ export default function ReportPage() {
     const already = !!result.alreadyReported;
     return (
       <div className="report-result card">
-        <div className="result-check">{already ? "ℹ" : merged ? "👥" : "✓"}</div>
+        <div className="result-check">
+          <CheckIcon width={26} height={26} />
+        </div>
         <h2>
           {already
             ? "You've already reported this"
@@ -214,7 +216,7 @@ export default function ReportPage() {
           </div>
           <p>{result.description}</p>
           {result.location?.address && (
-            <p className="muted small">📍 {result.location.address}</p>
+            <p className="muted small">{result.location.address}</p>
           )}
         </div>
 
@@ -272,7 +274,7 @@ export default function ReportPage() {
           {mediaType === "video" && videoUrl ? (
             <>
               <video className="preview" src={videoUrl} controls playsInline />
-              <p className="muted small center">🎥 AI analyses a key frame from your video.</p>
+              <p className="muted small center">AI analyses a key frame from your video.</p>
             </>
           ) : (
             <img className="preview" src={preview} alt="preview" />

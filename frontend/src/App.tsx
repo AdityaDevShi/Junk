@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./lib/auth";
 import { NotificationBell } from "./components/NotificationBell";
-import { BrandLogo } from "./components/icons";
+import { BrandLogo, PlusIcon } from "./components/icons";
 
 export default function App() {
   const loc = useLocation();
@@ -35,7 +35,8 @@ export default function App() {
             </Link>
           )}
           <Link to="/report" className="btn btn-primary btn-sm">
-            ＋<span className="rep-text">&nbsp;Report</span>
+            <PlusIcon />
+            <span className="rep-text">Report</span>
           </Link>
           <NotificationBell />
           {user ? (

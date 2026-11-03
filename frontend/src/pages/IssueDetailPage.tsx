@@ -109,7 +109,7 @@ export default function IssueDetailPage() {
 
       <h1>{issue.title}</h1>
       <p>{issue.description}</p>
-      {issue.location?.address && <p className="muted small">📍 {issue.location.address}</p>}
+      {issue.location?.address && <p className="muted small">{issue.location.address}</p>}
       <p className="muted small">
         Reported by {issue.reporterName} · {issue.reportCount} report
         {issue.reportCount > 1 ? "s" : ""}
@@ -121,14 +121,14 @@ export default function IssueDetailPage() {
             Sign in to confirm you've seen this
           </Link>
         ) : confirmed ? (
-          <p className="confirmed-note">✓ You've confirmed this issue</p>
+          <p className="confirmed-note">You've confirmed this issue</p>
         ) : (
           <button
             className="btn btn-ghost btn-sm"
             disabled={confirming}
             onClick={() => void corroborate()}
           >
-            {confirming ? "Confirming…" : "👀 I see this too"}
+            {confirming ? "Confirming…" : "I see this too"}
           </button>
         ))}
 
@@ -153,14 +153,14 @@ export default function IssueDetailPage() {
         issue.fixVerified !== undefined &&
         issue.fixVerified !== null && (
           <div className={`fix-verdict ${issue.fixVerified ? "ok" : "warn"}`}>
-            {issue.fixVerified ? "✓ AI-verified fix" : "⚠ Fix may need review"}
+            {issue.fixVerified ? "AI-verified fix" : "Fix may need review"}
             {issue.fixNote && <span className="fix-note"> — {issue.fixNote}</span>}
           </div>
         )}
 
       {issue.status === "resolved" && (
         <button className="btn btn-ghost" disabled={busy} onClick={() => void reopen()}>
-          ⚠ Not actually fixed? Reopen
+          Not actually fixed? Reopen
         </button>
       )}
 
@@ -178,7 +178,7 @@ export default function IssueDetailPage() {
           disabled={drafting}
           onClick={() => void generateComplaint()}
         >
-          {drafting ? "Drafting…" : complaint ? "Regenerate" : "✦ Generate complaint"}
+          {drafting ? "Drafting…" : complaint ? "Regenerate" : "Draft complaint"}
         </button>
       </div>
     </div>

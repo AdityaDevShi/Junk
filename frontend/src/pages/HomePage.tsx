@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ListIcon, MapIcon, PinIcon, PlusIcon, SearchIcon } from "../components/icons";
 import { api } from "../lib/api";
 import type { Issue } from "../types";
 import { SeverityBadge, StatusPill, categoryLabel } from "../components/badges";
@@ -110,21 +111,22 @@ export default function HomePage() {
     <div className="home">
       <section className="home-hero">
         <div>
+          <span className="kicker">Public issue register</span>
           <h1>Your neighbourhood</h1>
           <p className="muted">Spot it. Report it. Get it fixed.</p>
         </div>
         <Link to="/report" className="btn btn-primary">
-          ＋ Report an issue
+          <PlusIcon /> Report an issue
         </Link>
       </section>
 
       <div className="toolbar">
         <div className="view-toggle">
           <button className={view === "map" ? "active" : ""} onClick={() => setView("map")}>
-            🗺️ Map
+            <MapIcon /> Map
           </button>
           <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>
-            ☰ List
+            <ListIcon /> List
           </button>
         </div>
         <div className="stat-chips">
@@ -168,7 +170,9 @@ export default function HomePage() {
 
       {view === "map" && (
         <div className="map-search">
-          <span className="search-icon">🔍</span>
+          <span className="search-icon">
+            <SearchIcon />
+          </span>
           <input
             className="input search-input"
             placeholder="Search a place (e.g. Indiranagar, or Mumbai)…"
@@ -186,7 +190,7 @@ export default function HomePage() {
           )}
           {target && (
             <div className="search-result">
-              📍 {shortLabel(target.label)} — <b>{areaCount}</b> issue
+              <PinIcon width={16} height={16} /> {shortLabel(target.label)} — <b>{areaCount}</b> issue
               {areaCount !== 1 ? "s" : ""} within {RADIUS_KM} km
               <button className="link-btn" onClick={clearSearch}>
                 clear
@@ -198,7 +202,7 @@ export default function HomePage() {
 
       {!userLoc && !target && view === "map" && (
         <div className="loc-hint">
-          📍{" "}
+          <PinIcon width={16} height={16} />
           {locDenied
             ? "Location is blocked — allow it (lock icon → Location), then:"
             : "See what's happening around you."}{" "}
@@ -239,7 +243,7 @@ export default function HomePage() {
                     <h3>{issue.title}</h3>
                     <p className="muted small">{issue.description}</p>
                     {issue.location?.address && (
-                      <p className="muted small">📍 {issue.location.address}</p>
+                      <p className="muted small">{issue.location.address}</p>
                     )}
                     {issue.reportCount > 1 && (
                       <span className="report-count">{issue.reportCount} reports</span>

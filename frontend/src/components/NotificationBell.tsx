@@ -8,7 +8,7 @@ const STATUS_LABEL: Record<string, string> = {
   reported: "reported",
   acknowledged: "acknowledged",
   in_progress: "in progress",
-  resolved: "resolved ✅",
+  resolved: "resolved",
   reopened: "reopened",
 };
 

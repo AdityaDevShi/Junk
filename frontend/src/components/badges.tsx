@@ -51,7 +51,7 @@ export function AuthenticityBadge({
   if (issue.capturedLive) {
     return (
       <span className="trust-badge live" title="Captured live with the in-app camera">
-        🛡️ Live capture
+        Live capture
       </span>
     );
   }
@@ -61,14 +61,14 @@ export function AuthenticityBadge({
         className="trust-badge suspect"
         title={issue.authenticityNote || "Image may be AI-generated, a screenshot, or reused"}
       >
-        ⚠️ Unverified image
+        Unverified image
       </span>
     );
   }
   if (issue.authenticity === "genuine") {
     return (
       <span className="trust-badge ok" title="AI found no signs of tampering or reuse">
-        ✓ AI-checked
+        AI-checked
       </span>
     );
   }

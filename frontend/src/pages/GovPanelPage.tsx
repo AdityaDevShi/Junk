@@ -94,7 +94,7 @@ export default function GovPanelPage() {
       const res = await api.resolveIssue(id, c.base64, "image/jpeg", authorityName);
       if (res.rejected) {
         setNotice(
-          `❌ Fix not accepted — ${res.note || "the photo doesn't match the reported issue"}. The issue stays open; upload a photo of the actual fixed location.`
+          `Fix not accepted — ${res.note || "the photo doesn't match the reported issue"}. The issue stays open; upload a photo of the actual fixed location.`
         );
       }
     } finally {
@@ -108,7 +108,7 @@ export default function GovPanelPage() {
     return (
       <div className="gov">
         <div className="gov-banner">
-          🏛️ Authority Dashboard — <span>{authorityName}</span>
+          Authority dashboard — <span>{authorityName}</span>
         </div>
         <div className="card juris-setup">
           <h2>Set your jurisdiction</h2>
@@ -121,7 +121,7 @@ export default function GovPanelPage() {
             disabled={detecting}
             onClick={() => void detectJurisdiction()}
           >
-            {detecting ? "Detecting…" : "📍 Use my current location"}
+            {detecting ? "Detecting…" : "Use my current location"}
           </button>
           {detectError && <div className="error-box">{detectError}</div>}
           <div className="divider">
@@ -151,7 +151,7 @@ export default function GovPanelPage() {
   return (
     <div className="gov">
       <div className="gov-banner">
-        🏛️ Authority Dashboard — <span>{authorityName}</span> · {jurisdiction}
+        Authority dashboard — <span>{authorityName}</span> · {jurisdiction}
         <button
           className="link-btn juris-change"
           onClick={() => void saveProfile({ jurisdiction: "" })}
@@ -208,20 +208,20 @@ export default function GovPanelPage() {
               </div>
               <strong>{issue.title}</strong>
               {issue.location?.address && (
-                <span className="muted small">📍 {issue.location.address}</span>
+                <span className="muted small">{issue.location.address}</span>
               )}
               {issue.status === "resolved" &&
                 issue.fixVerified !== undefined &&
                 issue.fixVerified !== null && (
                   <span className={`ai-verdict ${issue.fixVerified ? "ok" : "warn"}`}>
-                    🤖 {issue.fixVerified ? "AI: fix verified" : "AI: needs review"}
+                    {issue.fixVerified ? "AI: fix verified" : "AI: needs review"}
                     {issue.fixNote ? ` — ${issue.fixNote}` : ""}
                   </span>
                 )}
             </div>
             <div className="gov-actions">
               {issue.status === "resolved" ? (
-                <span className="resolved-tag">✓ Resolved</span>
+                <span className="resolved-tag">Resolved</span>
               ) : (
                 <>
                   {issue.status === "reported" && (
@@ -247,7 +247,7 @@ export default function GovPanelPage() {
                     disabled={busyId === issue.id}
                     onClick={() => startResolve(issue.id)}
                   >
-                    {busyId === issue.id ? "Verifying…" : "✓ Resolve with photo"}
+                    {busyId === issue.id ? "Verifying…" : "Resolve with photo"}
                   </button>
                 </>
               )}
