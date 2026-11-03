@@ -3,7 +3,11 @@ import type { Severity } from "../types";
 import { classifyViaGroq, verifyFixViaGroq } from "./groq";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-const MODEL = (import.meta.env.VITE_GEMINI_MODEL as string) || "gemini-2.0-flash";
+const MODEL = (import.meta.env.VITE_GEMINI_MODEL as string) || "gemini-3.5-flash";
+// Tried in order: Google retires model names (gemini-2.0-flash now 404s), so a
+// stale VITE_GEMINI_MODEL shouldn't take the AI checks down with it.
+const MODELS = [...new Set([MODEL, "gemini-3.5-flash", "gemini-2.5-flash"])];
+const TIMEOUT_MS = 25_000;
 
 export const CATEGORIES = [
   "pothole",
@@ -35,6 +39,29 @@ function getAI(): GoogleGenAI | null {
   if (!API_KEY || API_KEY.startsWith("PASTE")) return null;
   if (!ai) ai = new GoogleGenAI({ apiKey: API_KEY });
   return ai;
+}
+
+type GenerateParams = Omit<Parameters<GoogleGenAI["models"]["generateContent"]>[0], "model">;
+
+// generateContent across MODELS with a per-attempt timeout; throws the last error.
+async function generate(client: GoogleGenAI, params: GenerateParams): Promise<string> {
+  let lastErr: unknown;
+  for (const model of MODELS) {
+    try {
+      const res = await Promise.race([
+        client.models.generateContent({ ...params, model }),
+        new Promise<never>((_, rej) =>
+          setTimeout(() => rej(new Error(`${model} timed out`)), TIMEOUT_MS)
+        ),
+      ]);
+      if (res.text) return res.text;
+      lastErr = new Error(`${model} returned no text`);
+    } catch (err) {
+      lastErr = err;
+      console.warn(`[gemini] ${model} failed —`, err);
+    }
+  }
+  throw lastErr;
 }
 
 function safeParseJson(text: string | undefined): Classification | null {
@@ -126,8 +153,7 @@ export async function classifyIssue({
   if (!client)
     return (await classifyViaGroq({ imageBase64, mimeType, note })) ?? stubClassification(note);
   try {
-    const res = await client.models.generateContent({
-      model: MODEL,
+    const text = await generate(client, {
       contents: [
         {
           role: "user",
@@ -136,7 +162,7 @@ export async function classifyIssue({
       ],
       config: { responseMimeType: "application/json", temperature: 0.2 },
     });
-    const parsed = safeParseJson(res.text);
+    const parsed = safeParseJson(text);
     if (!parsed) throw new Error("Gemini returned no parseable JSON");
     return parsed;
   } catch (err) {
@@ -157,8 +183,7 @@ export async function draftComplaint(issue: {
   const client = getAI();
   if (!client) return fallback;
   try {
-    const res = await client.models.generateContent({
-      model: MODEL,
+    return await generate(client, {
       contents: `Draft a concise, polite, formal complaint to the relevant Indian municipal authority for this civic issue. Under 120 words. Include a clear "Subject:" line, the issue, location, severity, and a request for timely action.
 
 Issue: ${JSON.stringify({
@@ -170,7 +195,6 @@ Issue: ${JSON.stringify({
       })}`,
       config: { temperature: 0.4 },
     });
-    return res.text || fallback;
   } catch (err) {
     console.warn("[gemini] complaint draft failed, using fallback —", err);
     return fallback;
@@ -196,8 +220,7 @@ export async function predictInsights(summary: string): Promise<Insight[] | null
   const client = getAI();
   if (!client) return null;
   try {
-    const res = await client.models.generateContent({
-      model: MODEL,
+    const text = await generate(client, {
       contents: `You are a municipal data-analyst AI for an Indian city civic-issue platform.
 From the aggregated report data below, produce 3 to 5 forward-looking PREDICTIVE insights:
 emerging hotspots, categories trending up, seasonal/monsoon risks, and public-health risks.
@@ -214,7 +237,7 @@ Return ONLY a JSON array. Each item:
  "tag": one of ["hotspot","trend","seasonal","risk","info"]}`,
       config: { responseMimeType: "application/json", temperature: 0.4 },
     });
-    const cleaned = (res.text || "")
+    const cleaned = text
       .trim()
       .replace(/^```json\s*/i, "")
       .replace(/^```\s*/i, "")
@@ -246,8 +269,7 @@ export async function verifyFix(
   const client = getAI();
   if (!client) return verifyFixViaGroq(before, after, context);
   try {
-    const res = await client.models.generateContent({
-      model: MODEL,
+    const text = await generate(client, {
       contents: [
         {
           role: "user",
@@ -262,7 +284,7 @@ export async function verifyFix(
       ],
       config: { responseMimeType: "application/json", temperature: 0.1 },
     });
-    const cleaned = (res.text || "")
+    const cleaned = text
       .trim()
       .replace(/^```json\s*/i, "")
       .replace(/^```\s*/i, "")

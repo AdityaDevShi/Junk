@@ -3,14 +3,16 @@ import type { Classification, FixVerification } from "./gemini";
 
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY as string | undefined;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+// Llama 4 Scout was retired on Groq; Qwen 3.8 is the current vision-capable model.
+const GROQ_MODEL =
+  (import.meta.env.VITE_GROQ_MODEL as string | undefined) || "qwen/qwen3.8-27b";
 
 function ready(): boolean {
   return !!GROQ_KEY && GROQ_KEY.startsWith("gsk_");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function groqJson(content: any): Promise<any> {
+async function groqJson(content: any, retries = 1): Promise<any> {
   const r = await fetch(GROQ_URL, {
     method: "POST",
     headers: {
@@ -23,10 +25,18 @@ async function groqJson(content: any): Promise<any> {
       temperature: 0.2,
       response_format: { type: "json_object" },
     }),
+    signal: AbortSignal.timeout(30_000),
   });
-  if (!r.ok) throw new Error(`Groq ${r.status}`);
+  // Free tier is ~7k input tokens/min; two photos can trip it. Wait once and retry.
+  if (r.status === 429 && retries > 0) {
+    const wait = Math.min(Number(r.headers.get("retry-after")) || 5, 15);
+    await new Promise((ok) => setTimeout(ok, wait * 1000));
+    return groqJson(content, retries - 1);
+  }
+  if (!r.ok) throw new Error(`Groq ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const d = await r.json();
-  return JSON.parse(d.choices?.[0]?.message?.content ?? "{}");
+  const text: string = d.choices?.[0]?.message?.content ?? "{}";
+  return JSON.parse(text.replace(/<think>[\s\S]*?<\/think>/g, "").trim() || "{}");
 }
 
 export async function classifyViaGroq({
