@@ -1,4 +1,3 @@
-import type { Severity } from "../types";
 import type { Classification, FixVerification } from "./gemini";
 
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY as string | undefined;
@@ -39,38 +38,21 @@ async function groqJson(content: any, retries = 1): Promise<any> {
   return JSON.parse(text.replace(/<think>[\s\S]*?<\/think>/g, "").trim() || "{}");
 }
 
-export async function classifyViaGroq({
-  imageBase64,
-  mimeType = "image/jpeg",
-  note = "",
-}: {
-  imageBase64: string;
-  mimeType?: string;
-  note?: string;
-}): Promise<Classification | null> {
+// Same prompt and parser as the Gemini path (passed in, so the two can't drift).
+export async function classifyViaGroq(
+  imageBase64: string,
+  mimeType: string,
+  prompt: string,
+  parse: (p: unknown) => Classification
+): Promise<Classification | null> {
   if (!ready()) return null;
   try {
-    const p = await groqJson([
-      {
-        type: "text",
-        text: `You are a civic-issue triage assistant for an Indian municipal app. Analyze the photo${
-          note ? ` (citizen note: "${note}")` : ""
-        }. Return JSON: {"title": string (<=8 words), "description": string (1-2 sentences), "category": one of ["pothole","garbage","streetlight","water_leakage","drainage","sewage","road_damage","tree_fallen","stray_animals","public_toilet","other"], "severity": one of ["low","medium","high","critical"], "isCivicIssue": boolean (FALSE if it is not a genuine public/civic problem — e.g. a selfie, a person, food, or a random indoor object), "confidence": number 0-1, "authenticity": one of ["genuine","suspicious"] (suspicious if AI-generated/rendered, a screenshot/photo-of-a-screen, stock/online imagery, or obviously edited), "authenticityNote": string (<=12 words)}.`,
-      },
-      { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-    ]);
-    return {
-      title: String(p.title || "Reported issue"),
-      description: String(p.description || ""),
-      category: String(p.category || "other"),
-      severity: (["low", "medium", "high", "critical"].includes(p.severity)
-        ? p.severity
-        : "medium") as Severity,
-      isCivicIssue: p.isCivicIssue !== false,
-      confidence: Number(p.confidence) || 0,
-      authenticity: p.authenticity === "suspicious" ? "suspicious" : "genuine",
-      authenticityNote: String(p.authenticityNote || ""),
-    };
+    return parse(
+      await groqJson([
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+      ])
+    );
   } catch (e) {
     console.warn("[groq] classify failed —", e);
     return null;
@@ -87,7 +69,7 @@ export async function verifyFixViaGroq(
     const p = await groqJson([
       {
         type: "text",
-        text: `Two photos of a "${context.category}" civic issue ("${context.title}"). The FIRST image is BEFORE; the SECOND is AFTER a claimed fix. Return JSON: {"verified": boolean, "confidence": number 0-1, "note": one short sentence}. "verified" is true only if they are plausibly the same place AND the AFTER shows it genuinely fixed.`,
+        text: `Two photos of a "${context.category}" civic issue ("${context.title}"). The FIRST image is BEFORE; the SECOND is AFTER a claimed fix. Return JSON: {"verified": boolean, "confidence": number 0-1, "note": one short sentence}. "verified" is true only if they are plausibly the same place AND the AFTER shows it genuinely fixed AND the AFTER is a real camera photo (not AI-generated, edited, or a screenshot).`,
       },
       { type: "image_url", image_url: { url: `data:${before.mimeType};base64,${before.base64}` } },
       { type: "image_url", image_url: { url: `data:${after.mimeType};base64,${after.base64}` } },

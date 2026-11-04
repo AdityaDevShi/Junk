@@ -18,6 +18,7 @@ import {
 import { db } from "./firebase";
 import { classifyIssue, draftComplaint, verifyFix, predictInsights } from "./gemini";
 import type { Insight } from "./gemini";
+import { rejectionMessage, shouldReject } from "./authenticity";
 import type { Issue, Severity } from "../types";
 
 const COLL = "issues";
@@ -157,6 +158,7 @@ export interface ReportInput {
   mediaType?: "image" | "video";
   videoData?: string | null; // inline clip data URL, stored only if it fits Firestore
   capturedLive?: boolean; // true when taken with the in-app live camera (higher trust)
+  aiMarker?: string | null; // AI-provenance tag found in the original file's metadata
 }
 
 // Firestore docs cap at ~1 MB; keep the inline clip well under that.
@@ -260,6 +262,11 @@ export const api = {
   async reportIssue(
     input: ReportInput
   ): Promise<Issue & { merged?: boolean; alreadyReported?: boolean }> {
+    if (input.aiMarker) {
+      throw new Error(
+        rejectionMessage({ verdict: "ai_generated", aiProbability: 1, note: input.aiMarker, source: "metadata" })
+      );
+    }
     const classified = await classifyIssue({
       imageBase64: input.imageBase64,
       mimeType: input.mimeType,
@@ -271,6 +278,7 @@ export const api = {
         "That photo doesn't look like a civic issue — please capture the actual problem (pothole, garbage, leak, broken streetlight, etc.)."
       );
     }
+    if (shouldReject(classified.forensics)) throw new Error(rejectionMessage(classified.forensics!));
 
     const dup = await findOpenDuplicate(classified.category, input.location);
     if (dup) {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
-import { compressImage } from "../lib/image";
+import { compressImage, findAiMarker } from "../lib/image";
 import { extractVideoFrame, inlineVideoIfSmall } from "../lib/video";
 import { getLocation } from "../lib/geo";
 import { useAuth } from "../lib/auth";
@@ -34,6 +34,7 @@ export default function ReportPage() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null); // object URL for playback
   const [videoData, setVideoData] = useState<string | null>(null); // inline clip for storage
   const [capturedLive, setCapturedLive] = useState(false); // live in-app camera = higher trust
+  const [aiMarker, setAiMarker] = useState<string | null>(null); // AI tag in upload metadata
 
   // Celebrate a successful report.
   useEffect(() => {
@@ -76,7 +77,8 @@ export default function ReportPage() {
         setMediaType("video");
         setError(null);
       } else {
-        const c = await compressImage(file);
+        const [c, marker] = await Promise.all([compressImage(file), findAiMarker(file)]);
+        setAiMarker(marker);
         clearVideo();
         setPreview(c.dataUrl);
         setBase64(c.base64);
@@ -134,6 +136,7 @@ export default function ReportPage() {
         mediaType,
         videoData,
         capturedLive,
+        aiMarker: capturedLive ? null : aiMarker,
       });
       setResult(issue);
       setPhase("done");

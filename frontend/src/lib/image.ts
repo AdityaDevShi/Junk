@@ -53,3 +53,21 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     img.src = src;
   });
 }
+
+// AI generators (OpenAI, Google, Adobe, Microsoft…) label their output in the
+// original file's C2PA/IPTC metadata; Stable Diffusion tools write the prompt.
+// Compression strips all of it, so this reads the raw upload first.
+const AI_MARKERS =
+  /trainedAlgorithmicMedia|Midjourney|DALL[·-]E|Adobe Firefly|Stable Diffusion|ComfyUI|NovelAI|Negative prompt:|Steps: \d+, Sampler/;
+
+export async function findAiMarker(file: File): Promise<string | null> {
+  try {
+    const bytes = new Uint8Array(await file.slice(0, 2_000_000).arrayBuffer());
+    let text = "";
+    for (let i = 0; i < bytes.length; i += 8192)
+      text += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    return text.match(AI_MARKERS)?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}

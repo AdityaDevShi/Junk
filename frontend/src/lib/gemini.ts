@@ -1,12 +1,30 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import type { Severity } from "../types";
 import { classifyViaGroq, verifyFixViaGroq } from "./groq";
+import {
+  FORENSICS_FIELDS,
+  FORENSICS_GUIDE,
+  isSuspicious,
+  parseAuthenticity,
+  type AuthenticityCheck,
+} from "./authenticity";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 const MODEL = (import.meta.env.VITE_GEMINI_MODEL as string) || "gemini-3.5-flash";
 // Tried in order: Google retires model names (gemini-2.0-flash now 404s), so a
 // stale VITE_GEMINI_MODEL shouldn't take the AI checks down with it.
-const MODELS = [...new Set([MODEL, "gemini-3.5-flash", "gemini-2.5-flash"])];
+// Each model has its own free-tier daily quota, so the lite models add capacity.
+const MODELS = [
+  ...new Set([
+    MODEL,
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash",
+  ]),
+];
+// Models that hit their daily quota this session — skipped instead of retried.
+const exhausted = new Set<string>();
 const TIMEOUT_MS = 25_000;
 
 export const CATEGORIES = [
@@ -32,6 +50,7 @@ export interface Classification {
   confidence?: number;
   authenticity?: "genuine" | "suspicious";
   authenticityNote?: string;
+  forensics?: AuthenticityCheck;
 }
 
 let ai: GoogleGenAI | null = null;
@@ -43,13 +62,27 @@ function getAI(): GoogleGenAI | null {
 
 type GenerateParams = Omit<Parameters<GoogleGenAI["models"]["generateContent"]>[0], "model">;
 
+// Gemini 3 "thinks" by default, which is most of the latency. Gemini 2.5 takes a
+// token budget instead of a level.
+function thinkingFor(model: string, level: ThinkingLevel) {
+  if (model.startsWith("gemini-2.5"))
+    return { thinkingBudget: level === ThinkingLevel.MINIMAL ? 0 : 512 };
+  return { thinkingLevel: level };
+}
+
 // generateContent across MODELS with a per-attempt timeout; throws the last error.
-async function generate(client: GoogleGenAI, params: GenerateParams): Promise<string> {
+async function generate(
+  client: GoogleGenAI,
+  params: GenerateParams,
+  thinking: ThinkingLevel = ThinkingLevel.LOW
+): Promise<string> {
   let lastErr: unknown;
   for (const model of MODELS) {
+    if (exhausted.has(model)) continue;
     try {
+      const config = { ...params.config, thinkingConfig: thinkingFor(model, thinking) };
       const res = await Promise.race([
-        client.models.generateContent({ ...params, model }),
+        client.models.generateContent({ ...params, config, model }),
         new Promise<never>((_, rej) =>
           setTimeout(() => rej(new Error(`${model} timed out`)), TIMEOUT_MS)
         ),
@@ -58,6 +91,7 @@ async function generate(client: GoogleGenAI, params: GenerateParams): Promise<st
       lastErr = new Error(`${model} returned no text`);
     } catch (err) {
       lastErr = err;
+      if (/RESOURCE_EXHAUSTED|"code":429/.test(String(err))) exhausted.add(model);
       console.warn(`[gemini] ${model} failed —`, err);
     }
   }
@@ -124,6 +158,8 @@ function classifyPrompt(note: string): string {
 Analyze the attached photo of a reported public problem.
 ${note ? `Citizen note: "${note}"` : ""}
 
+${FORENSICS_GUIDE}
+
 Return ONLY a JSON object with this exact shape:
 {
   "title": string (<= 8 words),
@@ -132,14 +168,33 @@ Return ONLY a JSON object with this exact shape:
   "severity": one of ["low","medium","high","critical"],
   "isCivicIssue": boolean,
   "confidence": number between 0 and 1,
-  "authenticity": one of ["genuine","suspicious"],
-  "authenticityNote": string (<= 12 words, why)
+  ${FORENSICS_FIELDS}
 }
 
-Severity: "critical" = immediate hazard (open manhole, live wire, sinkhole, gas/sewage leak). "high" = significant risk. "medium" = standard. "low" = minor.
-Authenticity: mark "suspicious" if the image looks AI-generated/rendered, is a screenshot or photo-of-a-screen, looks like stock/online imagery, or shows obvious editing — otherwise "genuine".`;
+isCivicIssue: false if this is not a genuine public problem (a selfie, people, food, an indoor object, a meme).
+Severity: "critical" = immediate hazard (open manhole, live wire, sinkhole, gas/sewage leak). "high" = significant risk. "medium" = standard. "low" = minor.`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseClassification(p: any): Classification {
+  const forensics = parseAuthenticity(p);
+  return {
+    title: String(p?.title || "Reported issue"),
+    description: String(p?.description || ""),
+    category: CATEGORIES.includes(p?.category) ? p.category : "other",
+    severity: (["low", "medium", "high", "critical"].includes(p?.severity)
+      ? p.severity
+      : "medium") as Severity,
+    isCivicIssue: p?.isCivicIssue !== false,
+    confidence: Number(p?.confidence) || 0,
+    authenticity: isSuspicious(forensics) ? "suspicious" : "genuine",
+    authenticityNote: forensics.note,
+    forensics,
+  };
+}
+
+// One call does triage + forensics. Groq first (sub-second, per-minute quota),
+// then Gemini (free tier is ~20 requests/day per model), then the keyword stub.
 export async function classifyIssue({
   imageBase64,
   mimeType = "image/jpeg",
@@ -149,25 +204,28 @@ export async function classifyIssue({
   mimeType?: string;
   note?: string;
 }): Promise<Classification> {
+  const prompt = classifyPrompt(note);
+  const viaGroq = await classifyViaGroq(imageBase64, mimeType, prompt, parseClassification);
+  if (viaGroq) return viaGroq;
   const client = getAI();
-  if (!client)
-    return (await classifyViaGroq({ imageBase64, mimeType, note })) ?? stubClassification(note);
+  if (!client) return stubClassification(note);
   try {
-    const text = await generate(client, {
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: classifyPrompt(note) }, { inlineData: { mimeType, data: imageBase64 } }],
-        },
-      ],
-      config: { responseMimeType: "application/json", temperature: 0.2 },
-    });
+    const text = await generate(
+      client,
+      {
+        contents: [
+          { role: "user", parts: [{ text: prompt }, { inlineData: { mimeType, data: imageBase64 } }] },
+        ],
+        config: { responseMimeType: "application/json", temperature: 0.2 },
+      },
+      ThinkingLevel.LOW
+    );
     const parsed = safeParseJson(text);
     if (!parsed) throw new Error("Gemini returned no parseable JSON");
-    return parsed;
+    return parseClassification(parsed);
   } catch (err) {
-    console.warn("[gemini] classify failed, trying Groq —", err);
-    return (await classifyViaGroq({ imageBase64, mimeType, note })) ?? stubClassification(note);
+    console.warn("[gemini] classify failed, using keyword fallback —", err);
+    return stubClassification(note);
   }
 }
 
@@ -266,8 +324,10 @@ export async function verifyFix(
   after: { base64: string; mimeType: string },
   context: { title: string; category: string }
 ): Promise<FixVerification | null> {
+  const viaGroq = await verifyFixViaGroq(before, after, context);
+  if (viaGroq) return viaGroq;
   const client = getAI();
-  if (!client) return verifyFixViaGroq(before, after, context);
+  if (!client) return null;
   try {
     const text = await generate(client, {
       contents: [
@@ -275,7 +335,7 @@ export async function verifyFix(
           role: "user",
           parts: [
             {
-              text: `Two photos of a reported "${context.category}" civic issue ("${context.title}"). The FIRST image is BEFORE; the SECOND is the AFTER a claimed fix. Decide: (a) are they plausibly the same place/object, and (b) does the AFTER show the issue genuinely resolved? Return ONLY JSON: {"verified": boolean, "confidence": number between 0 and 1, "note": one short sentence}.`,
+              text: `Two photos of a reported "${context.category}" civic issue ("${context.title}"). The FIRST image is BEFORE; the SECOND is the AFTER a claimed fix. Decide: (a) are they plausibly the same place/object, and (b) does the AFTER show the issue genuinely resolved, and (c) is the AFTER a real camera photo (not AI-generated, edited, or a screenshot)? "verified" is true only if all three hold. Return ONLY JSON: {"verified": boolean, "confidence": number between 0 and 1, "note": one short sentence}.`,
             },
             { inlineData: { mimeType: before.mimeType, data: before.base64 } },
             { inlineData: { mimeType: after.mimeType, data: after.base64 } },
@@ -297,7 +357,7 @@ export async function verifyFix(
       note: String(p.note || ""),
     };
   } catch (err) {
-    console.warn("[gemini] verifyFix failed, trying Groq —", err);
-    return verifyFixViaGroq(before, after, context);
+    console.warn("[gemini] verifyFix failed —", err);
+    return null;
   }
 }
